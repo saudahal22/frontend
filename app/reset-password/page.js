@@ -117,7 +117,6 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
       <FadeIn>
         <div className="w-full max-w-4xl h-auto md:h-[600px] bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
-          
           {/* Left Section - Illustration */}
           <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
             <div className="mt-10 w-full flex justify-center">
