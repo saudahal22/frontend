@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FadeIn, SlideUp } from '../../components/Animations';
@@ -33,12 +33,13 @@ function Spinner() {
   );
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -114,142 +115,151 @@ export default function ResetPasswordPage() {
   };
 
   return (
+    <div className="w-full max-w-4xl h-auto md:h-[600px] bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
+      {/* Left Section - Illustration */}
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
+        <div className="mt-10 w-full flex justify-center">
+          <Image
+            src="/Mobile-encryption-amico-1.png"
+            alt="Reset Password Illustration"
+            width={300}
+            height={250}
+            className="w-full max-w-xs md:max-w-sm h-auto object-contain"
+          />
+        </div>
+      </div>
+
+      {/* Right Section - Form */}
+      <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
+        {/* Logo di latar belakang */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <Image
+            src="/logo.png"
+            alt="Coconut Logo"
+            width={120}
+            height={120}
+            style={{ width: '250px', height: '280px' }}
+            className="opacity-10"
+          />
+        </div>
+
+        <div className="relative z-10">
+          <SlideUp delay={300}>
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-2">
+              Reset Password
+            </h2>
+          </SlideUp>
+
+          <p className="text-center text-gray-600 text-sm mb-6">
+            Masukkan password baru untuk akun Anda.
+          </p>
+
+          {error && (
+            <SlideUp delay={400}>
+              <p
+                ref={errorRef}
+                className="text-red-500 text-sm text-center mb-4 bg-red-50 p-3 rounded-lg"
+              >
+                {error}
+              </p>
+            </SlideUp>
+          )}
+
+          {success && (
+            <SlideUp delay={400}>
+              <p
+                ref={successRef}
+                className="text-green-500 text-sm text-center mb-4 bg-green-50 p-3 rounded-lg"
+              >
+                {success}
+              </p>
+            </SlideUp>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <SlideUp delay={500}>
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password Baru
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out"
+                  placeholder="Masukkan password baru"
+                  disabled={loading || !token}
+                />
+              </div>
+            </SlideUp>
+
+            <SlideUp delay={600}>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Konfirmasi Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out"
+                  placeholder="Ulangi password baru"
+                  disabled={loading || !token}
+                />
+              </div>
+            </SlideUp>
+
+            <SlideUp delay={700}>
+              <button
+                type="submit"
+                disabled={loading || !token}
+                className="w-full bg-gradient-to-r from-blue-900 to-sky-700 text-white py-3 rounded-xl 
+                           hover:from-blue-800 hover:to-sky-600 
+                           transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 
+                           font-semibold flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <Spinner />
+                    Mereset...
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
+              </button>
+            </SlideUp>
+          </form>
+
+          <SlideUp delay={800} className="text-center mt-6">
+            <Link
+              href="/login"
+              className="text-sm text-sky-700 hover:text-sky-900 font-medium hover:underline transition-all"
+            >
+              Kembali ke Login
+            </Link>
+          </SlideUp>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 🔑 Bungkus pakai Suspense agar useSearchParams tidak error di build
+export default function ResetPasswordPage() {
+  return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
       <FadeIn>
-        <div className="w-full max-w-4xl h-auto md:h-[600px] bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
-          {/* Left Section - Illustration */}
-          <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
-            <div className="mt-10 w-full flex justify-center">
-              <Image
-                src="/Mobile-encryption-amico-1.png"
-                alt="Reset Password Illustration"
-                width={300}
-                height={250}
-                className="w-full max-w-xs md:max-w-sm h-auto object-contain"
-              />
-            </div>
-          </div>
-
-          {/* Right Section - Form */}
-          <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
-            {/* Logo di latar belakang */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <Image
-                src="/logo.png"
-                alt="Coconut Logo"
-                width={120}
-                height={120}
-                style={{ width: '250px', height: '280px' }}
-                className="opacity-10"
-              />
-            </div>
-
-            <div className="relative z-10">
-              <SlideUp delay={300}>
-                <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-2">
-                  Reset Password
-                </h2>
-              </SlideUp>
-
-              <p className="text-center text-gray-600 text-sm mb-6">
-                Masukkan password baru untuk akun Anda.
-              </p>
-
-              {error && (
-                <SlideUp delay={400}>
-                  <p
-                    ref={errorRef}
-                    className="text-red-500 text-sm text-center mb-4 bg-red-50 p-3 rounded-lg"
-                  >
-                    {error}
-                  </p>
-                </SlideUp>
-              )}
-
-              {success && (
-                <SlideUp delay={400}>
-                  <p
-                    ref={successRef}
-                    className="text-green-500 text-sm text-center mb-4 bg-green-50 p-3 rounded-lg"
-                  >
-                    {success}
-                  </p>
-                </SlideUp>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <SlideUp delay={500}>
-                  <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      Password Baru
-                    </label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out"
-                      placeholder="Masukkan password baru"
-                      disabled={loading || !token}
-                    />
-                  </div>
-                </SlideUp>
-
-                <SlideUp delay={600}>
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      Konfirmasi Password
-                    </label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out"
-                      placeholder="Ulangi password baru"
-                      disabled={loading || !token}
-                    />
-                  </div>
-                </SlideUp>
-
-                <SlideUp delay={700}>
-                  <button
-                    type="submit"
-                    disabled={loading || !token}
-                    className="w-full bg-gradient-to-r from-blue-900 to-sky-700 text-white py-3 rounded-xl 
-                               hover:from-blue-800 hover:to-sky-600 
-                               transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 
-                               font-semibold flex items-center justify-center"
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner />
-                        Mereset...
-                      </>
-                    ) : (
-                      'Reset Password'
-                    )}
-                  </button>
-                </SlideUp>
-              </form>
-
-              <SlideUp delay={800} className="text-center mt-6">
-                <Link
-                  href="/login"
-                  className="text-sm text-sky-700 hover:text-sky-900 font-medium hover:underline transition-all"
-                >
-                  Kembali ke Login
-                </Link>
-              </SlideUp>
-            </div>
-          </div>
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <ResetPasswordForm />
+        </Suspense>
       </FadeIn>
     </div>
   );
