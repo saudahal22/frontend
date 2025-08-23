@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FadeIn, SlideUp } from '../../components/Animations';
 import { apiClient } from '../../lib/apiClient';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 // Komponen Spinner
 function Spinner() {
@@ -39,20 +39,23 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(null);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-
   const errorRef = useRef(null);
   const successRef = useRef(null);
 
-  // Cek token saat halaman load
+  // Ambil token dari URL (client-side only)
   useEffect(() => {
-    if (!token) {
-      setError('Token tidak ditemukan. Link reset password tidak valid.');
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('token');
+      setToken(t);
+      if (!t) {
+        setError('Token tidak ditemukan. Link reset password tidak valid.');
+      }
     }
-  }, [token]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,7 +83,6 @@ function ResetPasswordForm() {
       return;
     }
 
-    // Minimal: huruf besar, angka, simbol (regex sederhana)
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
       setError('Password harus mengandung huruf besar, angka, dan simbol.');
@@ -131,7 +133,7 @@ function ResetPasswordForm() {
 
       {/* Right Section - Form */}
       <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
-        {/* Logo di latar belakang */}
+        {/* Background Logo */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <Image
             src="/logo.png"
@@ -252,7 +254,6 @@ function ResetPasswordForm() {
   );
 }
 
-// 🔑 Bungkus pakai Suspense agar useSearchParams tidak error di build
 export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
