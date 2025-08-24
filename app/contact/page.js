@@ -1,10 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import Footer from '../../components/Footer';
 import Navbar from '../../components/Navbar';
 import { FadeIn, SlideUp } from '../../components/Animations';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -18,6 +17,11 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [status, setStatus] = useState('');
+
+  // Ref untuk form dan container peta
+  const formRef = useRef(null);
+  const mapContainerRef = useRef(null);
+  const [mapHeight, setMapHeight] = useState('320px'); // fallback height
 
   // Handle input change
   const handleChange = (e) => {
@@ -119,6 +123,28 @@ export default function Contact() {
     }
   };
 
+  // Sinkronisasi tinggi peta dengan form
+  useEffect(() => {
+    const adjustMapHeight = () => {
+      if (formRef.current && window.innerWidth >= 1024) {
+        // Desktop: peta ikuti tinggi form
+        const formHeight = formRef.current.offsetHeight;
+        setMapHeight(`${formHeight}px`);
+      } else {
+        // Mobile/tablet: gunakan tinggi tetap
+        setMapHeight('320px');
+      }
+    };
+
+    // Jalankan saat komponen mount dan saat resize
+    adjustMapHeight();
+    window.addEventListener('resize', adjustMapHeight);
+
+    return () => {
+      window.removeEventListener('resize', adjustMapHeight);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <Navbar />
@@ -128,12 +154,12 @@ export default function Contact() {
         <section className="relative py-16 px-4 text-center">
           <div className="container mx-auto">
             <FadeIn>
-              <h1 className="p-10 text-4xl md:text-6xl font-bold font-playfair mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent animate-gradient">
+              <h1 className="text-4xl md:text-6xl font-bold font-playfair mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent animate-gradient pt-5">
                 Contact Us
               </h1>
             </FadeIn>
             <SlideUp delay={200}>
-              <p className="text-lg md:text-xl text-black max-w-2xl mx-auto leading-relaxed mb-8">
+              <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-10">
                 Kami terbuka untuk pertanyaan, kolaborasi, atau pendaftaran anggota baru.
                 <br />
                 Jangan ragu untuk menghubungi kami!
@@ -141,11 +167,11 @@ export default function Contact() {
             </SlideUp>
 
             {/* Form & Map */}
-            <div className="flex flex-col lg:flex-row gap-8 md:gap-12 items-start max-w-6xl mx-auto mt-8">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
               {/* Form Kontak */}
-              <div className="w-full lg:flex-1">
+              <div ref={formRef} className="w-full lg:flex-1">
                 <SlideUp delay={300}>
-                  <div className="bg-gradient-to-br from-white/95 to-sky-50/95 p-6 md:p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/60 backdrop-blur-sm">
+                  <div className="bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-sky-100">
                     <form onSubmit={handleSubmit} className="space-y-6">
                       {/* Nama Depan & Belakang */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -159,10 +185,8 @@ export default function Contact() {
                             value={formData.firstName}
                             onChange={handleChange}
                             placeholder="John"
-                            className={`w-full p-3 border rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-sky-500 ${
-                              errors.firstName
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-gray-300'
+                            className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
+                              errors.firstName ? 'border-red-500 bg-red-50' : ''
                             }`}
                           />
                           {errors.firstName && (
@@ -180,10 +204,8 @@ export default function Contact() {
                             value={formData.lastName}
                             onChange={handleChange}
                             placeholder="Doe"
-                            className={`w-full p-3 border rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-sky-500 ${
-                              errors.lastName
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-gray-300'
+                            className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
+                              errors.lastName ? 'border-red-500 bg-red-50' : ''
                             }`}
                           />
                           {errors.lastName && (
@@ -194,7 +216,7 @@ export default function Contact() {
 
                       {/* Email */}
                       <div>
-                        <label className="block text-sm font-medium text-black mb-2 text-left">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Email
                         </label>
                         <input
@@ -203,8 +225,8 @@ export default function Contact() {
                           value={formData.email}
                           onChange={handleChange}
                           placeholder="you@email.com"
-                          className={`w-full p-3 border rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-sky-500 ${
-                            errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                          className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
+                            errors.email ? 'border-red-500 bg-red-50' : ''
                           }`}
                         />
                         {errors.email && (
@@ -214,21 +236,21 @@ export default function Contact() {
 
                       {/* Phone Number */}
                       <div>
-                        <label className="block text-sm font-medium text-black mb-2 text-left">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Phone Number
                         </label>
                         <div className="relative">
-                          <select className="absolute top-0 left-0 w-24 h-full bg-gray-50 border border-gray-300 rounded-l-lg text-black text-sm focus:outline-none">
-                            <option value="+62">+62 (ID)</option>
-                          </select>
+                          <span className="absolute top-0 left-0 w-20 h-full flex items-center justify-center bg-gray-50 border border-gray-300 rounded-l-lg text-gray-600 text-sm">
+                            +62
+                          </span>
                           <input
                             type="tel"
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
                             placeholder="812-3456-7890"
-                            className={`w-full p-3 pl-28 border rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-sky-500 ${
-                              errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            className={`w-full p-3 pl-20 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
+                              errors.phone ? 'border-red-500 bg-red-50' : ''
                             }`}
                           />
                         </div>
@@ -239,7 +261,7 @@ export default function Contact() {
 
                       {/* Message */}
                       <div>
-                        <label className="block text-sm font-medium text-black mb-2 text-left">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Message
                         </label>
                         <textarea
@@ -248,8 +270,8 @@ export default function Contact() {
                           onChange={handleChange}
                           placeholder="Tulis pesan kamu di sini..."
                           rows="5"
-                          className={`w-full p-3 border rounded-lg outline-none transition resize-none focus:ring-2 focus:ring-sky-400 focus:border-sky-500 ${
-                            errors.message ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                          className={`w-full p-3 border border-gray-300 rounded-lg outline-none resize-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
+                            errors.message ? 'border-red-500 bg-red-50' : ''
                           }`}
                         ></textarea>
                         {errors.message && (
@@ -261,7 +283,7 @@ export default function Contact() {
                       <div className="text-center">
                         <button
                           type="submit"
-                          className="bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold px-8 py-3 rounded-full hover:from-sky-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                          className="bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold px-8 py-3 rounded-full hover:from-sky-600 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                         >
                           📩 Kirim Pesan
                         </button>
@@ -270,14 +292,14 @@ export default function Contact() {
 
                     {/* Status Message */}
                     {status && !isSubmitted && (
-                      <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 text-sm rounded-lg">
+                      <div className="mt-4 p-3 bg-yellow-50 text-yellow-700 text-sm rounded-lg border border-yellow-200">
                         {status}
                       </div>
                     )}
 
                     {/* Success Message */}
                     {isSubmitted && (
-                      <div className="mt-4 p-3 bg-green-100 text-green-800 text-sm rounded-lg">
+                      <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200">
                         Terima kasih! Pesan Anda telah dikirim ke tim COCONUT.
                       </div>
                     )}
@@ -285,23 +307,44 @@ export default function Contact() {
                 </SlideUp>
               </div>
 
-              {/* Peta Lokasi */}
-              <div className="w-full lg:flex-1 mt-8 lg:mt-0">
+              {/* Peta Lokasi - Tinggi Dinamis */}
+              <div
+                ref={mapContainerRef}
+                className="w-full lg:flex-1 mt-6 lg:mt-0"
+              >
                 <SlideUp delay={500}>
-                  <div className="relative group rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-700">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10"></div>
-                    <Image
-                      src="/lokasi.png"
-                      alt="Lokasi Coconut Lab"
-                      width={500}
-                      height={600}
-                      className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700"
-                      priority
-                    />
-                    <div className="absolute bottom-6 left-6 text-white z-20">
-                      <h3 className="text-xl font-bold">Sekret Kami</h3>
-                      <p className="text-sm">Algoo Cofee dan Snack</p>
+                  <div
+                    className="relative group rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer"
+                    style={{ height: mapHeight }}
+                  >
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none"></div>
+
+                    {/* Google Maps Embed */}
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.6410976472995!2d119.41051737483158!3d-5.160368096242469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dbee9ff47986693%3A0x102e5b47639d45a!2sAlgo%20Coffee%20%26%20Snack!5e0!3m2!1sid!2sid!4v1728000000000!5m2!1sid!2sid"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 grayscale"
+                      title="Lokasi Algo Coffee & Snack"
+                    ></iframe>
+
+                    {/* Text Overlay */}
+                    <div className="absolute bottom-5 left-5 text-white z-20">
+                      <h3 className="text-lg md:text-xl font-bold">Sekret Kami</h3>
+                      <p className="text-sm opacity-90">Algo Coffee & Snack</p>
                     </div>
+
+                    {/* Clickable Overlay */}
+                    <a
+                      href="https://maps.app.goo.gl/SQSXMmZgyMF4FFSx6"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 z-30"
+                      aria-label="Buka lokasi di Google Maps"
+                    ></a>
                   </div>
                 </SlideUp>
               </div>
@@ -318,7 +361,7 @@ export default function Contact() {
           0%, 100% {
             background-position: 0% 50%;
           }
-          50%
+          50% {
             background-position: 100% 50%;
           }
         }

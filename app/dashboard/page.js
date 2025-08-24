@@ -1,15 +1,12 @@
+// app/dashboard/page.js
 'use client';
 
-import Image from 'next/image';
-import Navbar from '../../components/NavbarDashboard';
-import Footer from '../../components/Footer';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { FadeIn, SlideUp } from '../../components/Animations';
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  // Data akan diambil dari API nanti
   const [profile, setProfile] = useState({
     name: 'Saudah Al',
     email: 'saudah@gmail.com',
@@ -18,7 +15,7 @@ export default function Dashboard() {
     avatar: '/slider/saudahlatarbiru.png',
   });
 
-  const [resultStatus, setResultStatus] = useState('Menunggu Hasil'); // 'Lulus', 'Tidak Lulus', 'Menunggu Hasil'
+  const [resultStatus] = useState('Menunggu Hasil');
   const [scheduleStatus] = useState('Dikonfirmasi');
   const [testSchedule] = useState([
     { date: '15 April 2025', time: '09:00 - 11:00', location: 'Algo cofee dan Snack' },
@@ -33,7 +30,6 @@ export default function Dashboard() {
     { id: 2, message: 'Pengajuan perubahan jadwal sedang diproses.', time: '1 hari lalu', read: true },
   ]);
 
-  // Simulasi notifikasi baru dari sistem
   useEffect(() => {
     const timer = setTimeout(() => {
       setNotifications(prev => [
@@ -56,8 +52,6 @@ export default function Dashboard() {
       setSubmitStatus('Mohon isi tanggal dan alasan.');
       return;
     }
-
-    // Di masa depan: kirim ke API
     setSubmitStatus('Terima kasih, permintaan Anda segera diproses oleh panitia.');
     setNewDate('');
     setReason('');
@@ -76,12 +70,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
-      <Navbar />
-
       <main className="relative overflow-hidden py-24">
-        <div className="container mx-auto px-7 max-w-6xl">
+        <div className="container mx-auto px-6 max-w-6xl pb-40">
           <FadeIn>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight max-w-4xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight">
               Dashboard Calon Anggota
             </h1>
             <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
@@ -90,11 +82,11 @@ export default function Dashboard() {
           </FadeIn>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Kolom Kiri: Profil & Status */}
+            {/* Kolom Kiri */}
             <div className="lg:col-span-2 space-y-8">
               {/* Informasi Profil */}
               <SlideUp delay={200}>
-                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
                   <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                     <span className="w-2 h-2 bg-sky-500 rounded-full mr-3"></span>
                     Informasi Profil
@@ -128,21 +120,17 @@ export default function Dashboard() {
 
               {/* Status & Kelulusan */}
               <SlideUp delay={300}>
-                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
                   <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                     Status & Hasil Seleksi
                   </h2>
-
-                  {/* Status Jadwal */}
                   <div className="p-6 bg-blue-50 rounded-2xl border border-blue-200 mb-6">
                     <p className="text-lg font-semibold text-blue-800">
                       Jadwal Tes: <span className="text-green-600">{scheduleStatus}</span>
                     </p>
                     <p className="text-gray-700 mt-2">Jadwal Anda telah dikonfirmasi. Siapkan perangkat dan dokumen Anda.</p>
                   </div>
-
-                  {/* Status Kelulusan */}
                   <div
                     className={`p-6 rounded-2xl border-l-4 ${
                       resultStatus === 'Lulus'
@@ -169,7 +157,7 @@ export default function Dashboard() {
 
               {/* Jadwal Tes */}
               <SlideUp delay={400}>
-                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
                   <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                     <span className="w-2 h-2 bg-sky-600 rounded-full mr-3"></span>
                     Jadwal Tes
@@ -192,7 +180,7 @@ export default function Dashboard() {
 
               {/* Pengajuan Ubah Jadwal */}
               <SlideUp delay={500}>
-                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
                   <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                     <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
                     Pengajuan Ubah Jadwal Tes
@@ -231,9 +219,9 @@ export default function Dashboard() {
               </SlideUp>
             </div>
 
-            {/* Kolom Kanan: Pemberitahuan */}
+            {/* Kolom Kanan: Notifikasi */}
             <SlideUp delay={600}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm h-fit">
+              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm h-fit">
                 <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                   <span className="w-2 h-2 bg-sky-700 rounded-full mr-3"></span>
                   Pemberitahuan
@@ -264,8 +252,6 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

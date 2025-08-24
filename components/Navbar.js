@@ -3,32 +3,28 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation'; // ✅ Tambahkan ini
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const pathname = usePathname(); // ✅ Dapatkan path aktif
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Fungsi cek status login
+  // Cek status login
   const checkLoginStatus = () => {
     const user = localStorage.getItem('coconut_user');
     setIsLoggedIn(!!user);
   };
 
   useEffect(() => {
-    // Cek status saat komponen mount
     checkLoginStatus();
 
-    // Scroll effect
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll);
-
-    // Dengarkan perubahan localStorage (misal: login/logout dari tab lain)
     window.addEventListener('storage', checkLoginStatus);
 
     return () => {
@@ -38,30 +34,34 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('coconut_user');
-    localStorage.removeItem('token'); // opsional: hapus token
-    setIsLoggedIn(false); // update state langsung
-    setIsOpen(false);
-    alert('Anda berhasil keluar');
+    if (confirm('Apakah Anda yakin ingin keluar dari akun Anda?')) {
+      localStorage.removeItem('coconut_user');
+      localStorage.removeItem('token');
+      setIsLoggedIn(false);
+      setIsOpen(false);
+      // Opsional: redirect ke beranda
+      window.location.href = '/'; // atau router.push('/')
+    }
   };
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/90 backdrop-blur-lg shadow-lg py-2'
-          : 'bg-white/30 backdrop-blur-lg shadow-lg py-2'
-      }`}
+  isScrolled
+    ? 'bg-white shadow-lg py-2'  
+    : 'bg-white shadow-lg py-2'  
+}`}
     >
       {/* Desktop Navbar */}
       <div className="hidden sm:flex items-center justify-between px-6 md:px-16">
         <div className="flex items-center">
-          <Link href="/">
+          <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/logo.png"
-              alt="Coconut Logo"
-              width={40}
-              height={40}
+              src="/logococonut1.png"
+              alt="Logo Coconut - Beranda"
+              width={100}
+              height={100}
+              priority
               className="h-10 w-auto transition-transform hover:scale-105 duration-300"
             />
           </Link>
@@ -74,21 +74,16 @@ export default function Navbar() {
             { href: '/activity', label: 'Aktivitas' },
             { href: '/contact', label: 'Kontak' },
           ].map((item) => {
-            // ✅ Cek apakah menu ini sedang aktif
             const isActive = pathname === item.href;
-
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`relative inline-block px-5 py-2 font-medium rounded-lg transition-all duration-300 transform hover:scale-110 hover:shadow-lg ${
-                  isActive
-                    ? 'text-sky-600 font-semibold' // ✅ Warna aktif
-                    : 'text-gray-800 group'
+                  isActive ? 'text-sky-600 font-semibold' : 'text-gray-800 group'
                 }`}
               >
                 {item.label}
-                {/* Background animasi hanya untuk non-aktif */}
                 {!isActive && (
                   <>
                     <span className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></span>
@@ -105,9 +100,13 @@ export default function Navbar() {
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
             <div className="relative group">
-              <button className="h-10 w-10 rounded-full overflow-hidden border-2 border-sky-500 hover:border-sky-600 focus:outline-none">
+              <button
+                type="button"
+                className="h-10 w-10 rounded-full overflow-hidden border-2 border-sky-500 hover:border-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                aria-label="Profil Pengguna"
+              >
                 <Image
-                  src="/user-avatar.png"
+                  src="/slider/saudahlatarbiru.png" // ✅ Ganti dengan avatar nyata
                   alt="Profil Pengguna"
                   width={40}
                   height={40}
@@ -116,11 +115,11 @@ export default function Navbar() {
               </button>
               <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200">
                 <Link
-                  href="/profile"
+                  href="/dashboard"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100 rounded-t-lg"
                   onClick={() => setIsOpen(false)}
                 >
-                  Profil
+                  Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -133,12 +132,18 @@ export default function Navbar() {
           ) : (
             <>
               <Link href="/login">
-                <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 rounded-full transition-transform hover:scale-105 duration-300 hover:shadow-md">
+                <button
+                  type="button"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 rounded-full transition-transform hover:scale-105 duration-300 hover:shadow-md"
+                >
                   Masuk
                 </button>
               </Link>
               <Link href="/registrasi">
-                <button className="bg-black hover:bg-gray-700 text-white font-bold py-1.5 px-4 rounded-full transition-transform hover:scale-105 duration-300 hover:shadow-md">
+                <button
+                  type="button"
+                  className="bg-black hover:bg-gray-700 text-white font-bold py-1.5 px-4 rounded-full transition-transform hover:scale-105 duration-300 hover:shadow-md"
+                >
                   Daftar
                 </button>
               </Link>
@@ -147,77 +152,73 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Header: Hamburger di kiri, Logo di kanan */}
+      {/* Mobile Header: Hamburger di kanan, Logo di kiri */}
       <div className="sm:hidden flex items-center justify-between px-4 py-3">
+        <Link href="/" className="flex items-center space-x-2">
+          <Image
+            src="/logococonut1.png"
+            alt="Logo Coconut"
+            width={100}
+            height={100}
+            className="h-8 w-auto"
+          />
+        </Link>
+
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="inline-flex items-center justify-center rounded-md p-2 text-gray-900 hover:bg-white/5 focus:outline-none"
+          className="inline-flex items-center justify-center rounded-md p-2 text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}
         >
           <svg
             className="h-6 w-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d={isOpen ? "M6 18L18 6M6 6l12 12" : "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"}
+              strokeWidth="2"
+              d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
             />
           </svg>
         </button>
-
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="font-bold text-gray-900 text-lg">Coconut</span>
-          <Image
-            src="/logo.png"
-            alt="Coconut Logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto"
-          />
-        </Link>
       </div>
 
       {/* Mobile Menu Dropdown */}
       {isOpen && (
-        <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-white/20">
+        <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-gray-200">
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
-
-            <Link
-              href="/"
-              className="block rounded-md bg-sky-600 px-3 py-2 text-base font-medium text-white"
-              onClick={() => setIsOpen(false)}
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Tentang
-            </Link>
-            <Link
-              href="/activity"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Aktivitas
-            </Link>
-            <Link
-              href="/contact"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Kontak
-            </Link>
+            {[
+              { href: '/', label: 'Beranda' },
+              { href: '/about', label: 'Tentang' },
+              { href: '/activity', label: 'Aktivitas' },
+              { href: '/contact', label: 'Kontak' },
+            ].map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`block px-3 py-2 text-base font-medium rounded-lg transition ${
+                    isActive
+                      ? 'bg-sky-600 text-white'
+                      : 'text-gray-800 hover:bg-sky-100 hover:text-sky-800'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             <div className="flex justify-center space-x-4 mt-4">
               {isLoggedIn ? (
                 <button
                   onClick={handleLogout}
+                  type="button"
                   className="bg-red-500 text-white font-bold py-1.5 px-4 rounded-full text-sm transition hover:scale-105"
                 >
                   Keluar
@@ -225,12 +226,18 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link href="/login">
-                    <button className="bg-blue-500 text-white font-bold py-1.5 px-4 rounded-full text-sm transition hover:scale-105">
+                    <button
+                      type="button"
+                      className="bg-blue-500 text-white font-bold py-1.5 px-4 rounded-full text-sm transition hover:scale-105"
+                    >
                       Masuk
                     </button>
                   </Link>
                   <Link href="/registrasi">
-                    <button className="bg-black text-white font-bold py-1.5 px-4 rounded-full text-sm transition hover:scale-105">
+                    <button
+                      type="button"
+                      className="bg-black text-white font-bold py-1.5 px-4 rounded-full text-sm transition hover:scale-105"
+                    >
                       Daftar
                     </button>
                   </Link>

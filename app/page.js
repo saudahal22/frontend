@@ -77,7 +77,7 @@ export default function HomePage() {
               <div className="bg-white p-6 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] hover:-translate-y-1 hover:shadow-lg transition duration-300">
                 <div className="flex justify-center mb-4 mt-[-70px]">
                   <Image
-                    src="/backend.png"
+                    src="/golang.png"
                     alt="Backend"
                     width={112}
                     height={112}

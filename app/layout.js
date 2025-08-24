@@ -5,6 +5,7 @@ import './globals.css';
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 
+// Load font
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -15,27 +16,35 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-// Daftar halaman yang TIDAK menampilkan navbar sama sekali
+// Daftar halaman yang TIDAK butuh navbar sama sekali
 const NO_NAVBAR_PAGES = [
   '/login',
   '/registrasi',
   '/register',
   '/forgot-password',
-  '/reset-password', 
+  '/reset-password',
   '/admin',
 ];
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
 
-  // Cek apakah halaman saat ini tidak butuh navbar
-  const hideNavbar = NO_NAVBAR_PAGES.includes(pathname);
+  // Cek apakah halaman saat ini TIDAK butuh navbar
+  // Termasuk: halaman spesifik + semua subhalaman di /dashboard
+  const hideNavbar =
+    NO_NAVBAR_PAGES.includes(pathname) ||
+    pathname.startsWith('/dashboard');
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Hanya tampilkan Navbar jika bukan di halaman yang disembunyikan */}
         {!hideNavbar && <Navbar />}
-        <main key={pathname}>{children}</main>
+        
+        {/* Konten utama */}
+        <main key={pathname}>
+          {children}
+        </main>
       </body>
     </html>
   );
