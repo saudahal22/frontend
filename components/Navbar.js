@@ -159,7 +159,7 @@ export default function Navbar() {
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
             <Link
               href="/"
-              className="block rounded-md bg-sky-600 px-3 py-2 text-base font-medium text-white"
+              className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-sky-100 hover:text-sky-800 transition"
               onClick={() => setIsOpen(false)}
             >
               Beranda

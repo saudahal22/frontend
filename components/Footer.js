@@ -71,7 +71,7 @@ export default function Footer() {
           © 2025 Coconut Lab • Dibuat dengan{' '}
           <span className="text-red-300">❤</span> oleh{' '}
           <Link
-            href="https://github.com/hacklab-id"
+            href="https://github.com/COCONUT-hacklab"
             target="_blank"
             rel="noopener noreferrer"
             className="text-white underline hover:text-sky-100 transition duration-200"
