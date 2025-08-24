@@ -27,24 +27,28 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Kirim ke backend /login
       const data = await apiClient('/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
 
-      // Simpan token dan data user dari backend
+      // ✅ Simpan token
       if (data.token) {
         localStorage.setItem('token', data.token);
       }
+
+      // ✅ Simpan user dengan key yang sesuai Navbar
       if (data.user) {
         localStorage.setItem('coconut_user', JSON.stringify(data.user));
       }
 
-      // Redirect ke dashboard/home
+      // 🔔 Trigger event agar Navbar (dan tab lain) tahu user sudah login
+      window.dispatchEvent(new Event('storage'));
+
+      // 🚀 Redirect ke halaman utama
       router.push('/');
+      router.refresh(); // opsional: refresh state
     } catch (err) {
-      // Tampilkan error dari backend (misal: "Password salah", "Username tidak ditemukan")
       setError(err.message || 'Login gagal. Cek kembali data Anda.');
     } finally {
       setLoading(false);
