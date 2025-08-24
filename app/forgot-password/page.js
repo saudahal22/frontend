@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useRef } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { FadeIn, SlideUp } from "../../components/Animations";
-import { apiClient } from "../../lib/apiClient";
-import { useRouter } from "next/navigation";
+import { useState, useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { FadeIn, SlideUp } from '../../components/Animations';
+import { apiClient } from '../../lib/apiClient';
+import { useRouter } from 'next/navigation';
 
 // Komponen Spinner
 function Spinner() {
@@ -34,9 +34,9 @@ function Spinner() {
 }
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const errorRef = useRef(null);
@@ -45,38 +45,44 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Reset pesan
+    setError('');
+    setSuccess('');
+
+    // Validasi frontend (UX)
     if (!email) {
-      setError("Email wajib diisi");
-      setSuccess("");
-      errorRef.current?.scrollIntoView({ behavior: "smooth" });
+      setError('Email wajib diisi');
+      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Format email tidak valid");
-      setSuccess("");
-      errorRef.current?.scrollIntoView({ behavior: "smooth" });
+      setError('Format email tidak valid');
+      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
-    setError("");
-    setSuccess("");
     setLoading(true);
 
     try {
-      const data = await apiClient("/forgot-password", {
-        method: "POST",
+      // Kirim ke backend /forgot-password
+      const data = await apiClient('/forgot-password', {
+        method: 'POST',
         body: JSON.stringify({ email }),
       });
 
-      setSuccess(data.message || "Link reset password sudah dikirim ke email.");
-      setEmail("");
+      // Jika sukses, tampilkan pesan dari backend
+      setSuccess(data.message || 'Link reset password sudah dikirim ke email.');
+      setEmail(''); // Kosongkan input
+
+      // Redirect ke login setelah 3 detik
       setTimeout(() => {
-        router.push("/login");
-      }, 3000); // Redirect setelah 3 detik
+        router.push('/login');
+      }, 3000);
     } catch (err) {
-      setError(err.message || "Gagal mengirim link reset. Coba lagi.");
-      successRef.current?.scrollIntoView({ behavior: "smooth" });
+      // Tampilkan error dari backend (misal: "Email tidak terdaftar")
+      setError(err.message || 'Gagal mengirim link reset. Coba lagi.');
+      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -106,9 +112,14 @@ export default function ForgotPasswordPage() {
               <Image
                 src="/logo.png"
                 alt="Coconut Logo"
-                width={120}
-                height={120}
-                style={{ width: "250px", height: "280px" }}
+                width={250}
+                height={340}
+                style={{
+                  width: '250px',
+                  height: '340px',
+                  opacity: 0.1,
+                  objectFit: 'contain',
+                }}
                 className="opacity-10"
               />
             </div>
@@ -121,10 +132,10 @@ export default function ForgotPasswordPage() {
               </SlideUp>
 
               <p className="text-center text-gray-600 mb-6 text-sm">
-                Masukkan email Anda, kami akan kirimkan link untuk mereset
-                password.
+                Masukkan email Anda, kami akan kirimkan link untuk mereset password.
               </p>
 
+              {/* Error Message */}
               {error && (
                 <SlideUp delay={400}>
                   <p
@@ -136,6 +147,7 @@ export default function ForgotPasswordPage() {
                 </SlideUp>
               )}
 
+              {/* Success Message */}
               {success && (
                 <SlideUp delay={400}>
                   <p
@@ -187,7 +199,7 @@ export default function ForgotPasswordPage() {
                         Mengirim...
                       </>
                     ) : (
-                      "Kirim Link Reset"
+                      'Kirim Link Reset'
                     )}
                   </button>
                 </SlideUp>
@@ -196,15 +208,10 @@ export default function ForgotPasswordPage() {
               <SlideUp delay={700}>
                 <div className="text-center mt-8">
                   <p className="text-sm text-gray-600">
-                    Sudah ingat password?{" "}
+                    Sudah ingat password?{' '}
                     <Link
                       href="/login"
-                      className="
-          text-sky-700 hover:text-sky-900 
-          font-medium 
-          hover:underline hover:underline-offset-2
-          transition-all duration-150
-        "
+                      className="text-sky-700 hover:text-sky-900 font-medium hover:underline hover:underline-offset-2 transition-all duration-150"
                     >
                       Kembali ke Login
                     </Link>

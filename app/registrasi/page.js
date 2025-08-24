@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FadeIn, SlideUp } from '../../components/Animations';
 import { apiClient } from '../../lib/apiClient';
 import { useRouter } from 'next/navigation';
 
@@ -46,26 +45,31 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Reset error
+    setError('');
+    setLoading(true);
+
+    // Validasi frontend
     if (!username || !email || !password || !confirmPassword) {
       setError('Semua field wajib diisi');
       errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setLoading(false);
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Format email tidak valid');
       errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Password dan konfirmasi tidak cocok');
       errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setLoading(false);
       return;
     }
-
-    setError('');
-    setLoading(true);
 
     try {
       const data = await apiClient('/register', {
@@ -74,14 +78,16 @@ export default function RegisterPage() {
           username,
           email,
           password,
-          confirm_password: confirmPassword,
+          confirm_password: confirmPassword, // sesuai dengan JSON tag di Go
         }),
       });
 
+      // Jika sukses
       alert(data.message || 'Akun berhasil dibuat! Silakan cek email untuk verifikasi.');
       router.push('/login');
     } catch (err) {
-      setError(err.message || 'Registrasi gagal. Coba lagi.');
+      // Tangkap error dari backend (utils.Error mengirim `error`)
+      setError(err.message); // sudah dihandle di apiClient
       errorRef.current?.scrollIntoView({ behavior: 'smooth' });
     } finally {
       setLoading(false);
@@ -90,179 +96,160 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
-      {/* Container utama: tetap di tengah */}
-      <FadeIn>
-        <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
-          
-          {/* Left Section - Illustration */}
-          <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
-            <div className="mt-10 w-full flex justify-center">
-              <Image
-                src="/Mobile-encryption-amico-1.png"
-                alt="Register Illustration"
-                width={300}
-                height={250}
-                className="w-full max-w-xs md:max-w-sm h-auto object-contain"
-              />
-            </div>
+      <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
+        
+        {/* Left Section - Illustration */}
+        <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
+          <div className="mt-10 w-full flex justify-center">
+            <Image
+              src="/Mobile-encryption-amico-1.png"
+              alt="Register Illustration"
+              width={300}
+              height={250}
+              className="w-full max-w-xs md:max-w-sm h-auto object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Right Section - Form */}
+        <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Image
+              src="/logo.png"
+              alt="Coconut Logo"
+              width={250}
+              height={340}
+              style={{
+                width: '250px',
+                height: '340px',
+                opacity: 0.1,
+                objectFit: 'contain',
+              }}
+              className="opacity-10"
+            />
           </div>
 
-          {/* Right Section - Register Form */}
-          <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50">
-            {/* Logo di latar belakang (transparan) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Image
-                  src="/logo.png"
-                  alt="Coconut Logo"
-                  width={250} // Lebar logo dalam piksel
-                  height={340} // Tinggi logo dalam piksel
-                  style={{
-                    width: "250px", // Tetapkan lebar
-                    height: "340px", // Tetapkan tinggi
-                    opacity: 0.1, // Atur opasitas agar logo tampak transparan
-                    objectFit: "contain", // Menjaga rasio aspek logo
-                  }}
-                  className="opacity-10"
+          <div className="relative z-10 space-y-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800">
+              Registrasi
+            </h2>
+
+            {/* Error Message */}
+            {error && (
+              <p
+                ref={errorRef}
+                className="text-red-500 text-sm text-center mb-4 bg-red-50 p-3 rounded-lg"
+              >
+                {error}
+              </p>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Username */}
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out disabled:bg-gray-100"
+                  placeholder="Masukkan username"
+                  disabled={loading}
                 />
               </div>
 
-            {/* Konten Form */}
-            <div className="relative z-10 space-y-6">
-              <SlideUp delay={300}>
-                <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800">
-                  Registrasi
-                </h2>
-              </SlideUp>
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out disabled:bg-gray-100"
+                  placeholder="Masukkan email"
+                  disabled={loading}
+                />
+              </div>
 
-              {/* Error tetap muncul, tapi tidak geser card */}
-              {error && (
-                <SlideUp delay={400}>
-                  <p
-                    ref={errorRef}
-                    className="text-red-500 text-sm text-center mb-4 bg-red-50 p-3 rounded-lg"
-                  >
-                    {error}
-                  </p>
-                </SlideUp>
-              )}
+              {/* Password */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out disabled:bg-gray-100"
+                  placeholder="Masukkan password"
+                  disabled={loading}
+                />
+              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <SlideUp delay={400}>
-                  <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out
-                                 disabled:bg-gray-100"
-                      placeholder="Masukkan username"
-                      disabled={loading}
-                    />
-                  </div>
-                </SlideUp>
+              {/* Confirm Password */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Konfirmasi Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
+                             focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
+                             bg-white text-gray-900 placeholder-gray-500
+                             transition duration-200 ease-in-out disabled:bg-gray-100"
+                  placeholder="Ulangi password"
+                  disabled={loading}
+                />
+              </div>
 
-                <SlideUp delay={500}>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out
-                                 disabled:bg-gray-100"
-                      placeholder="Masukkan email"
-                      disabled={loading}
-                    />
-                  </div>
-                </SlideUp>
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm text-sky-600 hover:underline hover:text-sky-800 transition">
+                  Lupa Password?
+                </Link>
+              </div>
 
-                <SlideUp delay={600}>
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out
-                                 disabled:bg-gray-100"
-                      placeholder="Masukkan password"
-                      disabled={loading}
-                    />
-                  </div>
-                </SlideUp>
-
-                <SlideUp delay={650}>
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      Konfirmasi Password
-                    </label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl shadow-sm 
-                                 focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
-                                 bg-white text-gray-900 placeholder-gray-500
-                                 transition duration-200 ease-in-out
-                                 disabled:bg-gray-100"
-                      placeholder="Ulangi password"
-                      disabled={loading}
-                    />
-                  </div>
-                </SlideUp>
-
-                <SlideUp delay={700}>
-                  <div className="text-right">
-                    <Link href="/forgot-password" className="text-sm text-sky-600 hover:underline hover:text-sky-800 transition">
-                      Lupa Password?
-                    </Link>
-                  </div>
-                </SlideUp>
-
-                <SlideUp delay={800}>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-900 to-sky-700 text-white py-3 rounded-xl 
-                               hover:from-blue-800 hover:to-sky-600 
-                               transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 
-                               font-semibold flex items-center justify-center"
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner />
-                        Processing...
-                      </>
-                    ) : (
-                      'Register'
-                    )}
-                  </button>
-                </SlideUp>
-              </form>
-            </div>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-900 to-sky-700 text-white py-3 rounded-xl 
+                           hover:from-blue-800 hover:to-sky-600 
+                           transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 
+                           font-semibold flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <Spinner />
+                    Memproses...
+                  </>
+                ) : (
+                  'Register'
+                )}
+              </button>
+            </form>
           </div>
         </div>
-      </FadeIn>
+      </div>
     </div>
   );
 }

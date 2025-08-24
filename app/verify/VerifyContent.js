@@ -1,5 +1,3 @@
-// app/verify/VerifyContent.js
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,23 +18,29 @@ function VerifyContentInner() {
   useEffect(() => {
     if (!token) {
       setStatus('error');
-      setMessage('Token verifikasi tidak ditemukan.');
+      setMessage('Token verifikasi tidak ditemukan. Pastikan Anda mengakses link dari email.');
       return;
     }
 
     const verify = async () => {
       try {
-        await apiClient(`/verify?token=${token}`, {
+        // Panggil backend: GET /verify?token=...
+        const data = await apiClient(`/verify?token=${token}`, {
           method: 'GET',
         });
+
+        // Jika sukses, ambil pesan dari backend
         setStatus('success');
-        setMessage('Email Anda berhasil diverifikasi! Silakan login.');
+        setMessage(data.message || 'Email Anda berhasil diverifikasi! Silakan login.');
+        
+        // Redirect ke login setelah 3 detik
         setTimeout(() => {
           router.push('/login');
         }, 3000);
       } catch (err) {
+        // Tampilkan error dari backend (misal: "Token tidak valid", "kedaluwarsa")
         setStatus('error');
-        setMessage(err.message || 'Token verifikasi tidak valid atau sudah kadaluarsa.');
+        setMessage(err.message || 'Terjadi kesalahan saat verifikasi. Coba lagi nanti.');
       }
     };
 
@@ -62,14 +66,19 @@ function VerifyContentInner() {
 
         {/* Right Section - Status */}
         <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
-          {/* Logo di latar belakang */}
+          {/* Logo di latar belakang (transparan) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <Image
               src="/logo.png"
               alt="Coconut Logo"
-              width={120}
-              height={120}
-              style={{ width: '250px', height: '280px' }}
+              width={250}
+              height={340}
+              style={{
+                width: '250px',
+                height: '340px',
+                opacity: 0.1,
+                objectFit: 'contain',
+              }}
               className="opacity-10"
             />
           </div>
@@ -118,7 +127,7 @@ function VerifyContentInner() {
 
 export default function VerifyContent() {
   return (
-    <Suspense fallback={<div className="text-center">Loading...</div>}>
+    <Suspense fallback={<div className="text-center py-10 text-gray-500">Memuat...</div>}>
       <VerifyContentInner />
     </Suspense>
   );
