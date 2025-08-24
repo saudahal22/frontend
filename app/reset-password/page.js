@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FadeIn, SlideUp } from '../../components/Animations';
-import { apiClient } from '../../lib/apiClient';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { FadeIn, SlideUp } from "../../components/Animations";
+import { apiClient } from "../../lib/apiClient";
+import { useRouter } from "next/navigation";
 
 // Komponen Spinner
 function Spinner() {
@@ -33,47 +33,48 @@ function Spinner() {
   );
 }
 
-export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+export default function ResetPasswordPage({ searchParams }) {
+  // ✅ Ambil token langsung dari props Next.js
+  const token = searchParams.token;
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
   const errorRef = useRef(null);
   const successRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     if (!password || !confirmPassword) {
-      setError('Semua field wajib diisi');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Semua field wajib diisi");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Password dan konfirmasi tidak cocok');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Password dan konfirmasi tidak cocok");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
     if (password.length < 8) {
-      setError('Password minimal 8 karakter');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Password minimal 8 karakter");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
     setLoading(true);
 
     try {
-      const data = await apiClient('/reset-password', {
-        method: 'PUT',
+      const data = await apiClient("/reset-password", {
+        method: "PUT",
         body: JSON.stringify({
           token,
           new_password: password,
@@ -81,17 +82,19 @@ export default function ResetPasswordPage() {
         }),
       });
 
-      setSuccess(data.message || 'Password berhasil direset. Silakan login.');
-      setPassword('');
-      setConfirmPassword('');
+      setSuccess(data.message || "Password berhasil direset. Silakan login.");
+      setPassword("");
+      setConfirmPassword("");
 
       // Redirect ke login setelah 3 detik
       setTimeout(() => {
-        router.push('/login');
+        router.push("/login");
       }, 3000);
     } catch (err) {
-      setError(err.message || 'Gagal mereset password. Token mungkin sudah kadaluarsa.');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError(
+        err.message || "Gagal mereset password. Token mungkin sudah kadaluarsa."
+      );
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -124,10 +127,10 @@ export default function ResetPasswordPage() {
                 width={250}
                 height={340}
                 style={{
-                  width: '250px',
-                  height: '340px',
+                  width: "250px",
+                  height: "340px",
                   opacity: 0.1,
-                  objectFit: 'contain',
+                  objectFit: "contain",
                 }}
                 className="opacity-10"
               />
@@ -230,7 +233,7 @@ export default function ResetPasswordPage() {
                         Memproses...
                       </>
                     ) : (
-                      'Reset Password'
+                      "Reset Password"
                     )}
                   </button>
                 </SlideUp>
@@ -239,7 +242,7 @@ export default function ResetPasswordPage() {
               <SlideUp delay={800}>
                 <div className="text-center mt-8">
                   <p className="text-sm text-gray-600">
-                    Ingat password?{' '}
+                    Ingat password?{" "}
                     <Link
                       href="/login"
                       className="text-sky-700 hover:text-sky-900 font-medium hover:underline hover:underline-offset-2 transition-all duration-150"
