@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation'; // ✅ Tambahkan ini
 
 export default function Navbar() {
+  const pathname = usePathname(); // ✅ Dapatkan path aktif
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -59,19 +61,33 @@ export default function Navbar() {
             { href: '/about', label: 'Tentang' },
             { href: '/activity', label: 'Aktivitas' },
             { href: '/contact', label: 'Kontak' },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="relative inline-block px-5 py-2 text-gray-800 font-medium rounded-lg transition-all duration-300 transform hover:scale-110 hover:shadow-lg group"
-            >
-              {item.label}
-              <span className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></span>
-              <span className="absolute inset-0 flex items-center justify-center text-gray-800 group-hover:text-white transition-colors duration-300 pointer-events-none">
+          ].map((item) => {
+            // ✅ Cek apakah menu ini sedang aktif
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative inline-block px-5 py-2 font-medium rounded-lg transition-all duration-300 transform hover:scale-110 hover:shadow-lg ${
+                  isActive
+                    ? 'text-sky-600 font-semibold' // ✅ Warna aktif
+                    : 'text-gray-800 group'
+                }`}
+              >
                 {item.label}
-              </span>
-            </Link>
-          ))}
+                {/* Background animasi hanya untuk non-aktif */}
+                {!isActive && (
+                  <>
+                    <span className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></span>
+                    <span className="absolute inset-0 flex items-center justify-center text-gray-800 group-hover:text-white transition-colors duration-300 pointer-events-none">
+                      {item.label}
+                    </span>
+                  </>
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center space-x-4">
@@ -120,7 +136,6 @@ export default function Navbar() {
 
       {/* Mobile Header: Logo di kiri, Hamburger di kanan */}
       <div className="sm:hidden flex items-center justify-between px-4 py-3">
-        {/* Kiri: Logo + Teks "Coconut" */}
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/logo.png"
@@ -132,7 +147,6 @@ export default function Navbar() {
           <span className="font-bold text-gray-900 text-lg">Coconut</span>
         </Link>
 
-        {/* Kanan: Hamburger Button */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -157,34 +171,28 @@ export default function Navbar() {
       {isOpen && (
         <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-white/20">
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
-            <Link
-              href="/"
-              className="block rounded-md px-3 py-2 text-base font-medium text-black hover:bg-sky-100 hover:text-sky-800 transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Beranda
-            </Link>
-            <Link
-              href="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Tentang
-            </Link>
-            <Link
-              href="/activity"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Aktivitas
-            </Link>
-            <Link
-              href="/contact"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Kontak
-            </Link>
+            {[
+              { href: '/', label: 'Beranda' },
+              { href: '/about', label: 'Tentang' },
+              { href: '/activity', label: 'Aktivitas' },
+              { href: '/contact', label: 'Kontak' },
+            ].map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block rounded-md px-3 py-2 text-base font-medium transition ${
+                    isActive
+                      ? 'text-sky-600 font-semibold'
+                      : 'text-gray-800 hover:bg-sky-100 hover:text-sky-800'
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             {/* Tombol Login/Logout untuk Mobile */}
             <div className="flex justify-center space-x-4 mt-4">

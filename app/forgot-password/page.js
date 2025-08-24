@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                 alt="Coconut Logo"
                 width={120}
                 height={120}
-                style={{ width: "250px", height: "280px" }}
+                style={{ width: "230px", height: "300px" }}
                 className="opacity-10"
               />
             </div>

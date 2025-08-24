@@ -364,7 +364,7 @@ export default function AdminDashboard() {
                               Tolak
                             </button>
                           </div>
-                          <p className="text-xs mt-2 text-gray-500">Status: <strong>{req.status}</strong></p>
+                          <p className="text-xs mt-2 text-black">Status: <strong>{req.status}</strong></p>
                         </div>
                       ))}
                     </div>

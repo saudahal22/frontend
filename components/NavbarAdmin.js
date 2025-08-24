@@ -16,7 +16,7 @@ export default function NavbarAdmin() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg shadow-lg py-3">
-      <div className="flex items-center justify-between px-4">
+      <div className="flex items-center justify-between px-4 max-w-7xl mx-auto">
         {/* Kiri: Hamburger Menu */}
         <button
           type="button"
@@ -54,7 +54,7 @@ export default function NavbarAdmin() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="bg-white/95 backdrop-blur-md border-t border-gray-200 font-bold">
+        <div className="bg-white/95 backdrop-blur-md border-t border-gray-200 font-bold max-w-7xl mx-auto">
           <div className="px-4 py-2 space-y-1 text-center">
             <Link
               href="/admin/dashboard"
@@ -76,13 +76,6 @@ export default function NavbarAdmin() {
               onClick={() => setIsOpen(false)}
             >
               Jadwal Tes
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
-              onClick={() => setIsOpen(false)}
-            >
-              Pengaturan
             </Link>
             <hr className="border-gray-200 my-1" />
             <button
