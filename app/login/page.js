@@ -38,7 +38,7 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token);
       }
       if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('coconut_user', JSON.stringify(data.user));
       }
 
       // Redirect ke dashboard/home
