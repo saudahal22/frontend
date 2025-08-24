@@ -11,24 +11,36 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Cek login saat halaman dimuat
-  useEffect(() => {
+  // Fungsi cek status login
+  const checkLoginStatus = () => {
     const user = localStorage.getItem('coconut_user');
-    if (user) {
-      setIsLoggedIn(true);
-    }
+    setIsLoggedIn(!!user);
+  };
 
+  useEffect(() => {
+    // Cek status saat komponen mount
+    checkLoginStatus();
+
+    // Scroll effect
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Dengarkan perubahan localStorage (misal: login/logout dari tab lain)
+    window.addEventListener('storage', checkLoginStatus);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('storage', checkLoginStatus);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('coconut_user');
-    setIsLoggedIn(false);
+    localStorage.removeItem('token'); // opsional: hapus token
+    setIsLoggedIn(false); // update state langsung
     setIsOpen(false);
     alert('Anda berhasil keluar');
   };
@@ -106,6 +118,7 @@ export default function Navbar() {
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100 rounded-t-lg"
+                  onClick={() => setIsOpen(false)}
                 >
                   Profil
                 </Link>
@@ -134,19 +147,8 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Header: Logo di kiri, Hamburger di kanan */}
+      {/* Mobile Header: Hamburger di kiri, Logo di kanan */}
       <div className="sm:hidden flex items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center space-x-2">
-          <Image
-            src="/logo.png"
-            alt="Coconut Logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto"
-          />
-          <span className="font-bold text-gray-900 text-lg">Coconut</span>
-        </Link>
-
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -165,36 +167,53 @@ export default function Navbar() {
             />
           </svg>
         </button>
+
+        <Link href="/" className="flex items-center space-x-2">
+          <span className="font-bold text-gray-900 text-lg">Coconut</span>
+          <Image
+            src="/logo.png"
+            alt="Coconut Logo"
+            width={32}
+            height={32}
+            className="h-8 w-auto"
+          />
+        </Link>
       </div>
 
       {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-white/20">
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
-            {[
-              { href: '/', label: 'Beranda' },
-              { href: '/about', label: 'Tentang' },
-              { href: '/activity', label: 'Aktivitas' },
-              { href: '/contact', label: 'Kontak' },
-            ].map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`block rounded-md px-3 py-2 text-base font-medium transition ${
-                    isActive
-                      ? 'text-sky-600 font-semibold'
-                      : 'text-gray-800 hover:bg-sky-100 hover:text-sky-800'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
 
-            {/* Tombol Login/Logout untuk Mobile */}
+            <Link
+              href="/"
+              className="block rounded-md bg-sky-600 px-3 py-2 text-base font-medium text-white"
+              onClick={() => setIsOpen(false)}
+            >
+              Beranda
+            </Link>
+            <Link
+              href="/about"
+              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
+              onClick={() => setIsOpen(false)}
+            >
+              Tentang
+            </Link>
+            <Link
+              href="/activity"
+              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
+              onClick={() => setIsOpen(false)}
+            >
+              Aktivitas
+            </Link>
+            <Link
+              href="/contact"
+              className="block px-3 py-2 text-base font-medium text-gray-800 hover:bg-sky-100 hover:text-sky-800 rounded-lg transition"
+              onClick={() => setIsOpen(false)}
+            >
+              Kontak
+            </Link>
+
             <div className="flex justify-center space-x-4 mt-4">
               {isLoggedIn ? (
                 <button

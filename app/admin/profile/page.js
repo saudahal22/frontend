@@ -19,7 +19,7 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-blue-900 mb-6">Profil Saya</h1>
 
           <div className="bg-white/90 p-8 rounded-2xl shadow-lg border border-white/50 backdrop-blur-sm text-center">
-            <img
+            <image
               src={admin.avatar}
               alt="Profil Admin"
               className="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-sky-500 object-cover"

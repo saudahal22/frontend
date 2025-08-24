@@ -1,46 +1,55 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { FadeIn, SlideUp } from "../../components/Animations";
-import Spinner from "../../components/Spinner";
-import { apiClient } from "../../lib/apiClient";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { FadeIn, SlideUp } from '../../components/Animations';
+import Spinner from '../../components/Spinner';
+import { apiClient } from '../../lib/apiClient';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!username || !password) {
-      setError("Please fill in all required fields");
+      setError('Semua field wajib diisi');
       return;
     }
 
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
-      const data = await apiClient("/login", {
-        method: "POST",
+      const data = await apiClient('/login', {
+        method: 'POST',
         body: JSON.stringify({ username, password }),
       });
 
-      // Simpan token dan data user
+      // ✅ Simpan token
       if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
       }
 
-      // Redirect setelah login
-      router.push("/");
+      // ✅ Simpan user dengan key yang sesuai Navbar
+      if (data.user) {
+        localStorage.setItem('coconut_user', JSON.stringify(data.user));
+      }
+
+      // 🔔 Trigger event agar Navbar (dan tab lain) tahu user sudah login
+      window.dispatchEvent(new Event('storage'));
+
+      // 🚀 Redirect ke halaman utama
+      router.push('/');
+      router.refresh(); // opsional: refresh state
     } catch (err) {
-      setError(err.message || "Login gagal. Cek username/password.");
+      setError(err.message || 'Login gagal. Cek kembali data Anda.');
     } finally {
       setLoading(false);
     }
@@ -64,23 +73,23 @@ export default function LoginPage() {
           </div>
 
           {/* Right Section - Login Form */}
-<div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
-  {/* Logo di latar belakang (transparan) */}
-  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-    <Image
-      src="/logo.png"
-      alt="Coconut Logo"
-      width={250} // Lebar logo dalam piksel
-      height={340} // Tinggi logo dalam piksel
-      style={{
-        width: "250px", // Tetapkan lebar
-        height: "340px", // Tetapkan tinggi
-        opacity: 0.1, // Atur opasitas agar logo tampak transparan
-        objectFit: "contain", // Menjaga rasio aspek logo
-      }}
-      className="opacity-10"
-    />
-  </div>
+          <div className="w-full md:w-1/2 p-8 md:p-10 relative bg-gradient-to-br from-white to-sky-50 flex flex-col justify-center">
+            {/* Logo di latar belakang (transparan) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Image
+                src="/logo.png"
+                alt="Coconut Logo"
+                width={250}
+                height={340}
+                style={{
+                  width: '250px',
+                  height: '340px',
+                  opacity: 0.1,
+                  objectFit: 'contain',
+                }}
+                className="opacity-10"
+              />
+            </div>
 
             <div className="relative z-10">
               <SlideUp delay={300}>
@@ -172,25 +181,19 @@ export default function LoginPage() {
                         Logging in...
                       </>
                     ) : (
-                      "Login"
+                      'Login'
                     )}
                   </button>
                 </SlideUp>
               </form>
 
-              {/* Tambahkan: Belum punya akun? */}
+              {/* Belum punya akun? */}
               <SlideUp delay={800}>
                 <div className="text-center mt-6">
                   <Link
                     href="/registrasi"
-                    className="
-        inline-block text-sm 
-        text-gray-600 hover:text-sky-700 
-        font-medium 
-        transition-all duration-200
-        hover:underline hover:underline-offset-2
-        focus:outline-none focus:ring-2 focus:ring-sky-300 rounded
-      "
+                    className="inline-block text-sm text-gray-600 hover:text-sky-700 font-medium 
+                               transition-all duration-200 hover:underline hover:underline-offset-2"
                   >
                     Belum punya akun? Daftar di sini
                   </Link>
