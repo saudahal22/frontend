@@ -9,23 +9,32 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Cek login saat halaman dimuat
+  // Cek status login saat halaman dimuat
   useEffect(() => {
-    const user = localStorage.getItem('coconut_user');
-    if (user) {
-      setIsLoggedIn(true);
-    }
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+    const checkLoginStatus = () => {
+      const user = localStorage.getItem('coconut_user');
+      setIsLoggedIn(!!user);
     };
+
+    checkLoginStatus();
+
+    // Update saat login/logout dari tab lain
+    window.addEventListener('storage', checkLoginStatus);
+
+    // Scroll effect
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     handleScroll();
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('coconut_user');
+    localStorage.removeItem('token'); // opsional: hapus token
     setIsLoggedIn(false);
     setIsOpen(false);
     alert('Anda berhasil keluar');
@@ -90,6 +99,7 @@ export default function Navbar() {
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-100 rounded-t-lg"
+                  onClick={() => setIsOpen(false)}
                 >
                   Profil
                 </Link>
@@ -118,9 +128,8 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Header: Logo di kiri, Hamburger di kanan */}
+      {/* Mobile Header */}
       <div className="sm:hidden flex items-center justify-between px-4 py-3">
-        {/* Kiri: Logo + Teks "Coconut" */}
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/logo.png"
@@ -132,7 +141,6 @@ export default function Navbar() {
           <span className="font-bold text-gray-900 text-lg">Coconut</span>
         </Link>
 
-        {/* Kanan: Hamburger Button */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -153,7 +161,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-white/20">
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
@@ -186,7 +194,6 @@ export default function Navbar() {
               Kontak
             </Link>
 
-            {/* Tombol Login/Logout untuk Mobile */}
             <div className="flex justify-center space-x-4 mt-4">
               {isLoggedIn ? (
                 <button
