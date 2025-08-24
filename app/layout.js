@@ -21,8 +21,8 @@ const NO_NAVBAR_PAGES = [
   '/registrasi',
   '/register',
   '/forgot-password',
-  '/masuk',
-  '/admin'
+  '/reset-password', 
+  '/admin',
 ];
 
 export default function RootLayout({ children }) {
