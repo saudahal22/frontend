@@ -1,3 +1,4 @@
+// app/contact/page.js
 'use client';
 
 import Footer from '../../components/Footer';
@@ -18,12 +19,10 @@ export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [status, setStatus] = useState('');
 
-  // Ref untuk form dan container peta
   const formRef = useRef(null);
   const mapContainerRef = useRef(null);
-  const [mapHeight, setMapHeight] = useState('320px'); // fallback height
+  const [mapHeight, setMapHeight] = useState('320px');
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -41,7 +40,6 @@ export default function Contact() {
     }));
   };
 
-  // Validasi form
   const validate = () => {
     const newErrors = {};
 
@@ -72,7 +70,6 @@ export default function Contact() {
     return newErrors;
   };
 
-  // Handle submit tanpa redirect
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
@@ -127,16 +124,13 @@ export default function Contact() {
   useEffect(() => {
     const adjustMapHeight = () => {
       if (formRef.current && window.innerWidth >= 1024) {
-        // Desktop: peta ikuti tinggi form
         const formHeight = formRef.current.offsetHeight;
         setMapHeight(`${formHeight}px`);
       } else {
-        // Mobile/tablet: gunakan tinggi tetap
         setMapHeight('320px');
       }
     };
 
-    // Jalankan saat komponen mount dan saat resize
     adjustMapHeight();
     window.addEventListener('resize', adjustMapHeight);
 
@@ -290,14 +284,12 @@ export default function Contact() {
                       </div>
                     </form>
 
-                    {/* Status Message */}
                     {status && !isSubmitted && (
                       <div className="mt-4 p-3 bg-yellow-50 text-yellow-700 text-sm rounded-lg border border-yellow-200">
                         {status}
                       </div>
                     )}
 
-                    {/* Success Message */}
                     {isSubmitted && (
                       <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200">
                         Terima kasih! Pesan Anda telah dikirim ke tim COCONUT.
@@ -307,39 +299,32 @@ export default function Contact() {
                 </SlideUp>
               </div>
 
-              {/* Peta Lokasi - Tinggi Dinamis */}
-              <div
-                ref={mapContainerRef}
-                className="w-full lg:flex-1 mt-6 lg:mt-0"
-              >
+              {/* Peta Lokasi */}
+              <div ref={mapContainerRef} className="w-full lg:flex-1 mt-6 lg:mt-0">
                 <SlideUp delay={500}>
                   <div
                     className="relative group rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer"
                     style={{ height: mapHeight }}
                   >
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none"></div>
 
-                    {/* Google Maps Embed */}
+                    {/* 🔗 Ganti iframe ke lokasi baru: https://maps.app.goo.gl/8Bz3ow85zS8f7XKp9 */}
                     <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.6410976472995!2d119.41051737483158!3d-5.160368096242469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dbee9ff47986693%3A0x102e5b47639d45a!2sAlgo%20Coffee%20%26%20Snack!5e0!3m2!1sid!2sid!4v1728000000000!5m2!1sid!2sid"
+                      src ="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.5438071041854!2d119.44766047362356!3d-5.176816952252241!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dbee3f711cca333%3A0xfb9cb4819c0a9337!2sAlgo%20Coffee%20%26%20Snacks!5e0!3m2!1sid!2sid!4v1756077772894!5m2!1sid!2sid" 
                       style={{ border: 0 }}
                       allowFullScreen=""
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 grayscale"
-                      title="Lokasi Algo Coffee & Snack"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     ></iframe>
 
-                    {/* Text Overlay */}
                     <div className="absolute bottom-5 left-5 text-white z-20">
-                      <h3 className="text-lg md:text-xl font-bold">Sekret Kami</h3>
-                      <p className="text-sm opacity-90">Algo Coffee & Snack</p>
+                      <h3 className="text-lg md:text-xl font-bold">Sekretariat Coconut</h3>
+                      <p className="text-sm opacity-90">Algo Coffee & Snack, Makassar</p>
                     </div>
 
-                    {/* Clickable Overlay */}
                     <a
-                      href="https://maps.app.goo.gl/SQSXMmZgyMF4FFSx6"
+                      href="https://maps.app.goo.gl/8Bz3ow85zS8f7XKp9"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="absolute inset-0 z-30"

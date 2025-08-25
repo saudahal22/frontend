@@ -9,8 +9,8 @@ export default function SchedulePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const [testSchedule] = useState([
-    { date: '15 April 2025', time: '09:00 - 11:00', location: 'Algo Cofee dan Snack' , keterangan: 'Tes Soal'},
-    { date: '16 April 2025', time: '13:00 - 15:00', location: 'Algo Cofee dan Snack', keterangan: 'Tes Wawancara' },
+    { date: '20 Agustus 2025', time: '09:00 - 11:00', location: 'Algo Cofee dan Snack' , keterangan: 'Tes Soal'},
+    { date: '25 Agustus 2025', time: '13:00 - 15:00', location: 'Algo Cofee dan Snack', keterangan: 'Tes Wawancara' },
   ]);
 
   if (!isLoggedIn) {
