@@ -56,7 +56,7 @@ export default function Activity() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       {/* Navbar */}
-      <Navbar />
+      
 
       {/* Main Content */}
       <main className="relative overflow-hidden">
@@ -70,7 +70,7 @@ export default function Activity() {
             </FadeIn>
             <SlideUp delay={200}>
               <p className="text-xl text-black max-w-2xl mx-auto leading-relaxed mb-10">
-                Workshop, dan Kolaborasi Teknologi untuk Generasi Muda, serta berbagai inisiatif kreatif yang mendorong inovasi dan pengembangan keterampilan di era digital.
+                Workshop, dan Kolaborasi Teknologi untuk Generasi Muda, serta berbagai inisiatif kreatif yang mendorong inovasi dan pengembangan <br /> keterampilan di era digital.
               </p>
             </SlideUp>
           </div>

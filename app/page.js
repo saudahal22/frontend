@@ -47,7 +47,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Jurusan Section */}
+       {/* Jurusan Section */}
         <section className="relative py-24 bg-gradient-to-r from-white/90 to-sky-50/90">
           <div className="container mx-auto ">
             {/* Logo Scroller */}
@@ -63,10 +63,12 @@ export default function HomePage() {
             </div>
             <FadeIn>
               <div className=" mt-10">
-                <h1 className="text-center text-3xl text-[#08314f] font-extrabold">
-                  Fokus <span className="text-[#44CDFF]">Yang Tersedia</span>
-                </h1>
-                <p className="text-black text-center mt-6">
+                 <h2 className="text-4xl md:text-5xl text-center font-bold font-playfair mb-6">
+                  <span className="bg-gradient-to-r from-sky-600 via-blue-800 to-sky-700 hover:bg-gradient-to-r hover:from-blue-800 hover:via-sky-600 hover:to-blue-900 bg-clip-text text-transparent">
+                    Fokus Yang Tersedia
+                  </span>
+                </h2>
+                <p className="text-black text-center mt-6 px-6">
                   Coconut memiliki 3 jurusan yang dapat kalian fokuskan saat
                   kalian bergabung dengan kami
                 </p>
@@ -74,10 +76,10 @@ export default function HomePage() {
             </FadeIn>
 
             <div className="grid grid-cols-1 md:grid-cols-3 mt-35 gap-15 px-15 md:px-10 max-w-7xl mx-auto">
-              <div className="bg-white p-6 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] hover:-translate-y-1 hover:shadow-lg transition duration-300">
+              <div className="bg-white p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] ">
                 <div className="flex justify-center mb-4 mt-[-70px]">
                   <Image
-                    src="/golang.png"
+                    src="/backend.png"
                     alt="Backend"
                     width={112}
                     height={112}
@@ -90,10 +92,10 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] hover:-translate-y-1 hover:shadow-lg transition duration-300">
+              <div className="bg-white p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] ">
                 <div className="flex justify-center mb-4 mt-[-70px]">
                   <Image
-                    src="/sistem.png"
+                    src="/SYSTEM2.png"
                     alt="Sistem"
                     width={112}
                     height={112}
@@ -106,7 +108,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] hover:-translate-y-1 hover:shadow-lg transition duration-300">
+              <div className="bg-white p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 rounded-lg shadow text-center md:w-[350px] md:h-[320px] h-[320px] ">
                 <div className="flex justify-center mb-4 mt-[-70px]">
                   <Image
                     src="/frontend.png"
@@ -146,41 +148,41 @@ export default function HomePage() {
             {/* Jarak dari teks ke gambar */}
             <div className="mb-12"></div>
 
-            {/* Grid Gambar */}
-            <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-              <SlideUp delay={200}>
-                <div className="relative rounded-[15px] overflow-hidden w-full md:w-[500px] md:h-[320px] h-64">
-                  <Image
-                    src="/coconut1.png"
-                    alt="Instructors"
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 opacity-40"></div>
-                </div>
-              </SlideUp>
+            {/* Bagian Gambar */}
+                  <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+                    <SlideUp delay={200}>
+                    <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
+                      <Image
+                      src="/coconut1.png"
+                      alt="Instructors"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 opacity-40"></div>
+                    </div>
+                    </SlideUp>
 
-              <SlideUp delay={400}>
-                <div className="relative rounded-[15px] overflow-hidden w-full md:w-[500px] md:h-[320px] h-64">
-                  <Image
-                    src="/coconut2.png"
-                    alt="Students"
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 opacity-40"></div>
-                </div>
-              </SlideUp>
-            </div>
+                    <SlideUp delay={400}>
+                    <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
+                      <Image
+                      src="/coconut2.png"
+                      alt="Students"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 opacity-40"></div>
+                    </div>
+                    </SlideUp>
+                  </div>
 
-            <div className="mt-20"></div>
+                  <div className="mt-20"></div>
 
-            {/* Kotak CTA */}
+                  {/* Kotak CTA */}
             <SlideUp delay={600}>
-              <div className="max-w-7xl  mx-auto">
+              <div className="max-w-7xl   mx-auto">
                 {/* Flex layout dari kode pertama, dibungkus dalam gradient card */}
                
-                  <section className="flex flex-col md:flex-row  md:px-5 gap-8 md:gap-20">
+                  <section className="flex flex-col md:flex-row  md:px- gap-8 md:gap-20">
                     {/* Bagian Teks */}
                     <div className="flex-1 ">
                       {/* Lingkaran dekoratif */}
@@ -188,7 +190,7 @@ export default function HomePage() {
 
                       {/* Judul */}
                       <div className="flex items-center mb-2">
-                        <h2 className="text-[#08314f] font-semibold text-[24px] md:mr-15 leading-tight">
+                        <h2 className="text-[#08314f] font-semibold text-[27px] md:mr-15 leading-tight">
                           Pembelajaran yang biasa Anda lakukan di <br /> kampus,
                           <span className="text-[#44CDFF]">
                             {" "}
@@ -206,17 +208,88 @@ export default function HomePage() {
                     {/* Bagian Gambar */}
                     <div className="flex-1 mt-10 ">
                       <Image
-                        src="/workhsop.png-removebg-preview.png"
+                        src="/Coding workshop-rafiki.png"
                         alt="Coding Workshop"
                         width={500}
                         height={400}
-                        className="w-full h-auto md:mt-[-90px] rounded-lg"
+                        className="w-full h-auto md:mt-[-90px] md:ml-12 rounded-lg"
                       />
                     </div>
                   </section>
                 
               </div>
             </SlideUp>
+          </div>
+        </section>
+        <section className="relative py-24">
+          <div className="container mx-auto px-6">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <h2 className="text-4xl md:text-5xl font-bold font-playfair mb-6">
+                  <span className="bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 hover:bg-gradient-to-r hover:from-sky-600 hover:via-blue-800 hover:to-sky-700 bg-clip-text text-transparent">
+                    Fokus Penelitian
+                  </span>
+                </h2>
+              </div>
+            </FadeIn>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              {[
+                {
+                  title: "Artificial Intelligence",
+                  icon: "🤖",
+                  desc: "Machine Learning, Deep Learning, Computer Vision",
+                  color: "from-sky-400 to-blue-500",
+                },
+                {
+                  title: "Cyber Security",
+                  icon: "🔒",
+                  desc: "Cybersecurity, Network Analysis, Penetration Testing",
+                  color: "from-blue-400 to-sky-500",
+                },
+                {
+                  title: "Web Development",
+                  icon: "🌐",
+                  desc: "Full-stack Development, Progressive Web Apps",
+                  color: "from-sky-500 to-blue-400",
+                },
+                {
+                  title: "Mobile Computing",
+                  icon: "📱",
+                  desc: "Android, iOS, Cross-platform Development",
+                  color: "from-blue-500 to-sky-400",
+                },
+                {
+                  title: "Data Science /Analytics",
+                  icon: "📊",
+                  desc: "Big Data Analytics, Data Visualization, IoT",
+                  color: "from-sky-400 to-blue-500",
+                },
+                {
+                  title: "Cloud Computing",
+                  icon: "☁️",
+                  desc: "Cloud Architecture, DevOps, Microservices",
+                  color: "from-blue-400 to-sky-500",
+                },
+              ].map((focus, index) => (
+                <SlideUp key={index} delay={200 * index}>
+                  <div className="group relative flex flex-col h-full">
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-100/50 to-blue-100/30 rounded-3xl blur-sm group-hover:blur-none transition-all duration-300"></div>
+                    <div className="relative bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-3 border border-white/50 backdrop-blur-sm text-center flex-1 flex flex-col">
+                      <div className="text-5xl mb-6 leading-none select-none">
+                        {focus.icon}
+                      </div>
+                      <h3 className="text-xl font-bold text-blue-900 mb-4">
+                        {focus.title}
+                      </h3>
+                      <p className="text-black leading-relaxed text-sm mt-auto">
+                        {focus.desc}
+                      </p>
+                    </div>
+                  </div>
+                </SlideUp>
+              ))}
+            </div>
           </div>
         </section>
       </main>
@@ -247,6 +320,7 @@ export default function HomePage() {
           color: transparent;
         }
       `}</style>
+
 
       <Footer />
     </div>

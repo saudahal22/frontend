@@ -105,18 +105,20 @@ export default function SoalTesPage() {
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <FadeIn>
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-blue-900">
-                Soal Tes
-              </h1>
-              <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold">
-                {formatTime(timeLeft)}
-              </div>
-            </div>
-            <p className="text-lg text-gray-600 mb-10">
-              Jawab semua soal di bawah ini. Anda dapat berpindah antar soal sebelum mengirim.
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+              Ujian Pilihan Ganda
+            </h1>
+            <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
+              Jawab semua soal dengan cermat. Waktu terbatas: {formatTime(timeLeft)}
             </p>
           </FadeIn>
+
+          {/* Timer Progress */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-sky-200">
+              <span className="text-lg font-semibold text-blue-800">⏰ {formatTime(timeLeft)}</span>
+            </div>
+          </div>
 
           <SlideUp delay={200}>
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">

@@ -1,37 +1,37 @@
 // app/contact/page.js
-'use client';
+"use client";
 
-import Footer from '../../components/Footer';
-import Navbar from '../../components/Navbar';
-import { FadeIn, SlideUp } from '../../components/Animations';
-import { useState, useRef, useEffect } from 'react';
+import Footer from "../../components/Footer";
+import Navbar from "../../components/Navbar";
+import { FadeIn, SlideUp } from "../../components/Animations";
+import { useState, useRef, useEffect } from "react";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    message: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    message: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
 
   const formRef = useRef(null);
   const mapContainerRef = useRef(null);
-  const [mapHeight, setMapHeight] = useState('320px');
+  const [mapHeight, setMapHeight] = useState("320px");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     let filteredValue = value;
-    if (name === 'firstName' || name === 'lastName') {
-      filteredValue = value.replace(/[^a-zA-Z\s]/g, '');
+    if (name === "firstName" || name === "lastName") {
+      filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
     }
-    if (name === 'phone') {
-      filteredValue = value.replace(/[^0-9\-]/g, '');
+    if (name === "phone") {
+      filteredValue = value.replace(/[^0-9\-]/g, "");
     }
 
     setFormData((prev) => ({
@@ -43,28 +43,30 @@ export default function Contact() {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'Nama depan wajib diisi';
+    if (!formData.firstName.trim())
+      newErrors.firstName = "Nama depan wajib diisi";
     else if (formData.firstName.length < 2)
-      newErrors.firstName = 'Nama depan minimal 2 huruf';
+      newErrors.firstName = "Nama depan minimal 2 huruf";
 
-    if (!formData.lastName.trim()) newErrors.lastName = 'Nama belakang wajib diisi';
+    if (!formData.lastName.trim())
+      newErrors.lastName = "Nama belakang wajib diisi";
     else if (formData.lastName.length < 2)
-      newErrors.lastName = 'Nama belakang minimal 2 huruf';
+      newErrors.lastName = "Nama belakang minimal 2 huruf";
 
     if (!formData.email) {
-      newErrors.email = 'Email wajib diisi';
+      newErrors.email = "Email wajib diisi";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Format email tidak valid';
+      newErrors.email = "Format email tidak valid";
     }
 
     if (!formData.phone) {
-      newErrors.phone = 'Nomor telepon wajib diisi';
+      newErrors.phone = "Nomor telepon wajib diisi";
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Pesan tidak boleh kosong';
+      newErrors.message = "Pesan tidak boleh kosong";
     } else if (formData.message.length < 10) {
-      newErrors.message = 'Pesan minimal 10 karakter';
+      newErrors.message = "Pesan minimal 10 karakter";
     }
 
     return newErrors;
@@ -81,42 +83,45 @@ export default function Contact() {
     }
 
     setErrors({});
-    setStatus('Mengirim...');
+    setStatus("Mengirim...");
 
     try {
-      const res = await fetch('https://formsubmit.co/ajax/hello@coconut.or.id', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          _subject: 'Pesan Baru dari Website COCONUT',
-          _captcha: 'false',
-          _template: 'table',
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-        }),
-      });
+      const res = await fetch(
+        "https://formsubmit.co/ajax/hello@coconut.or.id",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            _subject: "Pesan Baru dari Website COCONUT",
+            _captcha: "false",
+            _template: "table",
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            message: formData.message,
+          }),
+        }
+      );
 
       if (res.ok) {
         setIsSubmitted(true);
-        setStatus('Pesan berhasil dikirim!');
+        setStatus("Pesan berhasil dikirim!");
         setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          message: '',
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          message: "",
         });
       } else {
-        setStatus('Gagal mengirim pesan. Silakan coba lagi.');
+        setStatus("Gagal mengirim pesan. Silakan coba lagi.");
       }
     } catch (error) {
-      setStatus('Terjadi kesalahan. Silakan coba lagi.');
+      setStatus("Terjadi kesalahan. Silakan coba lagi.");
     }
   };
 
@@ -127,39 +132,46 @@ export default function Contact() {
         const formHeight = formRef.current.offsetHeight;
         setMapHeight(`${formHeight}px`);
       } else {
-        setMapHeight('320px');
+        setMapHeight("320px");
       }
     };
 
     adjustMapHeight();
-    window.addEventListener('resize', adjustMapHeight);
+    window.addEventListener("resize", adjustMapHeight);
 
     return () => {
-      window.removeEventListener('resize', adjustMapHeight);
+      window.removeEventListener("resize", adjustMapHeight);
     };
   }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
-      <Navbar />
+      <div className=" bg-gradient-to-bl from-sky-50 via-white to-blue-50">
+        <section className="relative py-24 text-center pb-40">
+          <div className="container mx-auto px-6 ">
+            <FadeIn>
+              <h1 className="text-5xl md:text-7xl font-bold font-playfair pt-20 py-3 bg-gradient-to-l from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent animate-gradient">
+                Contact Us
+              </h1>
+            </FadeIn>
+            <SlideUp delay={200}>
+              <p className="text-xl text-black max-w-2xl mx-auto leading-relaxed mb-10">
+                Kami terbuka untuk pertanyaan, kolaborasi, atau pendaftaran
+                anggota baru.
+                <br />
+                Jangan ragu untuk menghubungi kami!
+                <br />
+                pada kolom dibawah
+              </p>
+            </SlideUp>
+          </div>
+        </section>
+      </div>
 
       <main className="relative overflow-hidden">
         {/* Hero Section */}
         <section className="relative py-16 px-4 text-center">
           <div className="container mx-auto">
-            <FadeIn>
-              <h1 className="text-4xl md:text-6xl font-bold font-playfair mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent animate-gradient pt-5">
-                Contact Us
-              </h1>
-            </FadeIn>
-            <SlideUp delay={200}>
-              <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-10">
-                Kami terbuka untuk pertanyaan, kolaborasi, atau pendaftaran anggota baru.
-                <br />
-                Jangan ragu untuk menghubungi kami!
-              </p>
-            </SlideUp>
-
             {/* Form & Map */}
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
               {/* Form Kontak */}
@@ -180,11 +192,13 @@ export default function Contact() {
                             onChange={handleChange}
                             placeholder="John"
                             className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
-                              errors.firstName ? 'border-red-500 bg-red-50' : ''
+                              errors.firstName ? "border-red-500 bg-red-50" : ""
                             }`}
                           />
                           {errors.firstName && (
-                            <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.firstName}
+                            </p>
                           )}
                         </div>
 
@@ -199,11 +213,13 @@ export default function Contact() {
                             onChange={handleChange}
                             placeholder="Doe"
                             className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
-                              errors.lastName ? 'border-red-500 bg-red-50' : ''
+                              errors.lastName ? "border-red-500 bg-red-50" : ""
                             }`}
                           />
                           {errors.lastName && (
-                            <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.lastName}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -220,11 +236,13 @@ export default function Contact() {
                           onChange={handleChange}
                           placeholder="you@email.com"
                           className={`w-full p-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
-                            errors.email ? 'border-red-500 bg-red-50' : ''
+                            errors.email ? "border-red-500 bg-red-50" : ""
                           }`}
                         />
                         {errors.email && (
-                          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.email}
+                          </p>
                         )}
                       </div>
 
@@ -244,12 +262,14 @@ export default function Contact() {
                             onChange={handleChange}
                             placeholder="812-3456-7890"
                             className={`w-full p-3 pl-20 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
-                              errors.phone ? 'border-red-500 bg-red-50' : ''
+                              errors.phone ? "border-red-500 bg-red-50" : ""
                             }`}
                           />
                         </div>
                         {errors.phone && (
-                          <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.phone}
+                          </p>
                         )}
                       </div>
 
@@ -265,11 +285,13 @@ export default function Contact() {
                           placeholder="Tulis pesan kamu di sini..."
                           rows="5"
                           className={`w-full p-3 border border-gray-300 rounded-lg outline-none resize-none transition focus:ring-2 focus:ring-sky-400 focus:border-transparent ${
-                            errors.message ? 'border-red-500 bg-red-50' : ''
+                            errors.message ? "border-red-500 bg-red-50" : ""
                           }`}
                         ></textarea>
                         {errors.message && (
-                          <p className="text-red-500 text-xs mt-1">{errors.message}</p>
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.message}
+                          </p>
                         )}
                       </div>
 
@@ -300,7 +322,10 @@ export default function Contact() {
               </div>
 
               {/* Peta Lokasi */}
-              <div ref={mapContainerRef} className="w-full lg:flex-1 mt-6 lg:mt-0">
+              <div
+                ref={mapContainerRef}
+                className="w-full lg:flex-1 mt-6 lg:mt-0"
+              >
                 <SlideUp delay={500}>
                   <div
                     className="relative group rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer"
@@ -310,7 +335,7 @@ export default function Contact() {
 
                     {/* 🔗 Ganti iframe ke lokasi baru: https://maps.app.goo.gl/8Bz3ow85zS8f7XKp9 */}
                     <iframe
-                      src ="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.5438071041854!2d119.44766047362356!3d-5.176816952252241!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dbee3f711cca333%3A0xfb9cb4819c0a9337!2sAlgo%20Coffee%20%26%20Snacks!5e0!3m2!1sid!2sid!4v1756077772894!5m2!1sid!2sid" 
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3973.5438071041854!2d119.44766047362356!3d-5.176816952252241!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dbee3f711cca333%3A0xfb9cb4819c0a9337!2sAlgo%20Coffee%20%26%20Snacks!5e0!3m2!1sid!2sid!4v1756077772894!5m2!1sid!2sid"
                       style={{ border: 0 }}
                       allowFullScreen=""
                       loading="lazy"
@@ -319,8 +344,12 @@ export default function Contact() {
                     ></iframe>
 
                     <div className="absolute bottom-5 left-5 text-white z-20">
-                      <h3 className="text-lg md:text-xl font-bold">Sekretariat Coconut</h3>
-                      <p className="text-sm opacity-90">Algo Coffee & Snack, Makassar</p>
+                      <h3 className="text-lg md:text-xl font-bold">
+                        Sekretariat Coconut
+                      </h3>
+                      <p className="text-sm opacity-90">
+                        Algo Coffee & Snack, Makassar
+                      </p>
                     </div>
 
                     <a
@@ -343,7 +372,8 @@ export default function Contact() {
       {/* Animasi Gradient untuk Text */}
       <style jsx>{`
         @keyframes gradient {
-          0%, 100% {
+          0%,
+          100% {
             background-position: 0% 50%;
           }
           50% {
@@ -351,7 +381,13 @@ export default function Contact() {
           }
         }
         .animate-gradient {
-          background: linear-gradient(90deg, #1e40af, #0ea5e9, #0284c7, #1e40af);
+          background: linear-gradient(
+            90deg,
+            #1e40af,
+            #0ea5e9,
+            #0284c7,
+            #1e40af
+          );
           background-size: 200% 200%;
           animation: gradient 3s ease infinite;
           -webkit-background-clip: text;
