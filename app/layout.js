@@ -23,7 +23,7 @@ const NO_NAVBAR_PAGES = [
   '/register',
   '/forgot-password',
   '/reset-password',
-  '/admin',
+  
 ];
 
 export default function RootLayout({ children }) {
@@ -33,7 +33,8 @@ export default function RootLayout({ children }) {
   // Termasuk: halaman spesifik + semua subhalaman di /dashboard
   const hideNavbar =
     NO_NAVBAR_PAGES.includes(pathname) ||
-    pathname.startsWith('/dashboard');
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/admin-dashboard');
 
   return (
     <html lang="en">

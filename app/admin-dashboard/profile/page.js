@@ -1,9 +1,11 @@
+// app/dashboard/profile/page.js
 'use client';
 
-import NavbarAdmin from '../../../components/NavbarAdmin';
+
+
 
 export default function ProfilePage() {
-  const admin = {
+const admin = {
     name: 'Admin Coconut',
     email: 'admin@coconut.or.id',
     role: 'Super Admin',
@@ -13,7 +15,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <NavbarAdmin />
+     
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-20 px-6 py-10">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-blue-900 mb-6">Profil Saya</h1>

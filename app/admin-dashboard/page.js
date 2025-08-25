@@ -1,11 +1,12 @@
+// app/dashboard/page.js
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FadeIn, SlideUp } from '../../../components/Animations';
-import NavbarAdmin from '../../../components/NavbarAdmin';
+import Image from 'next/image';
+import { FadeIn, SlideUp } from '../../components/Animations';
 
-export default function AdminDashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+export default function DashboardCalonAnggota() {
+ const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   // Statistik
   const [stats, setStats] = useState({
@@ -293,8 +294,8 @@ export default function AdminDashboard() {
 
   return (
     <>
-      {/* ✅ NavbarAdmin muncul di sini */}
-      <NavbarAdmin />
+      
+      
 
       {/* Konten utama */}
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-20">

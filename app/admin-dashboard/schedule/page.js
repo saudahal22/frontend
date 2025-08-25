@@ -1,10 +1,11 @@
+// app/dashboard/profile/page.js
 'use client';
 
-import { useState } from 'react';
-import NavbarAdmin from '../../../components/NavbarAdmin';
+import { useState, useEffect } from 'react';
 
-export default function MembersPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+
+export default function ProfilePage() {
+ const [searchTerm, setSearchTerm] = useState('');
 
   const members = [
     {
@@ -36,7 +37,7 @@ export default function MembersPage() {
 
   return (
     <>
-      <NavbarAdmin />
+      
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-20 px-6 py-10">
         <div className="max-w-7xl mx-auto p-10">
           <h1 className="text-3xl font-bold text-blue-900 mb-6">Kelola Pendaftar</h1>
