@@ -300,6 +300,12 @@ export default function RegisterPage() {
                     'Register'
                   )}
                 </button>
+                <div className="mt-4 text-center text-sm">
+  <span className="text-gray-600">Sudah punya akun?</span>{' '}
+  <Link href="/login" className="text-sky-600 font-medium hover:underline">
+    Masuk
+  </Link>
+</div>
               </form>
             </div>
           </div>

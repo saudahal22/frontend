@@ -52,11 +52,13 @@ export default function DashboardCalonAnggota() {
                 <h2 className="text-xl font-semibold text-gray-800">{profile.name}</h2>
                 <p className="text-gray-600">{profile.email}</p>
                 <p className="text-sm text-gray-500">Bergabung: {profile.joinDate}</p>
-                <span className={`mt-2 inline-block px-3 py-1 text-sm rounded-full ${
-                  profile.status === 'Dikonfirmasi'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                <span
+                  className={`mt-2 inline-block px-3 py-1 text-sm rounded-full ${
+                    profile.status === 'Dikonfirmasi'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}
+                >
                   {profile.status}
                 </span>
               </div>

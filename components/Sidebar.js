@@ -7,13 +7,10 @@ import { useState } from 'react';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true); // default: terbuka di desktop
+  const [isOpen, setIsOpen] = useState(true); // Selalu terbuka di desktop
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleSidebar = () => setIsOpen(!isOpen);
 
-  // Menu untuk Calon Anggota
   const menuItems = [
     { href: '/dashboard', label: 'Beranda', icon: '🏠' },
     { href: '/dashboard/profile', label: 'Profil Saya', icon: '👤' },
@@ -24,10 +21,10 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Tombol Hamburger (selalu muncul di kiri atas) */}
+      {/* Tombol Hamburger (hanya di mobile) */}
       <button
         onClick={toggleSidebar}
-        className="fixed left-4 z-50 text-black rounded-lg shadow-md flex items-center justify-center w-8 h-7 hover:bg-sky-700 transition"
+        className="lg:hidden fixed left-4 z-50 p-2 text-black flex items-center justify-center w-10 h-10 "
         aria-label={isOpen ? 'Tutup sidebar' : 'Buka sidebar'}
       >
         <svg
@@ -38,21 +35,9 @@ export default function Sidebar() {
           stroke="currentColor"
         >
           {isOpen ? (
-            // X Icon (tutup)
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           ) : (
-            // Hamburger Icon (☰)
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           )}
         </svg>
       </button>
@@ -63,7 +48,7 @@ export default function Sidebar() {
           isOpen ? 'w-64' : 'w-16'
         }`}
       >
-        {/* Header: Kosong (tidak ada logo atau teks) */}
+        {/* Header: Kosong */}
         <div className="p-4 border-b border-gray-200"></div>
 
         {/* Menu Navigasi */}
@@ -104,11 +89,11 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Overlay saat sidebar terbuka di mobile */}
+      {/* Overlay di mobile */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/30 z-30"
-          onClick={toggleSidebar}
+          onClick={() => setIsOpen(false)}
         ></div>
       )}
     </>
