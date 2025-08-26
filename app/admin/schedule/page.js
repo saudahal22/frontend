@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import NavbarAdmin from '../../../components/NavbarAdmin';
+
 
 export default function SchedulePage() {
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', location: '' });
@@ -20,7 +20,6 @@ export default function SchedulePage() {
 
   return (
     <>
-      <NavbarAdmin />
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-20 px-6 py-10">
         <div className="max-w-7xl mx-auto p-10">
           <h1 className="text-3xl font-bold text-blue-900 mb-6">Jadwal Tes</h1>
