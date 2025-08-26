@@ -1,51 +1,58 @@
 // app/dashboard/material/page.js
 'use client';
 
-import { useState, useEffect } from 'react'; // ✅ Diperbaiki: tambah useEffect
+import { useState, useEffect } from 'react';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 
 export default function SoalTesPage() {
-  const [timeLeft, setTimeLeft] = useState(60 * 30); // 30 menit
+  const [timeLeft, setTimeLeft] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [questions, setQuestions] = useState([]);
 
-  const questions = [
-    {
-      id: 1,
-      text: "Apa output dari kode Python berikut?\nprint(2 ** 3 + 1)",
-      options: ["9", "7", "8", "10"],
-      correct: 0,
-    },
-    {
-      id: 2,
-      text: "Manakah yang BUKAN tipe data di JavaScript?",
-      options: ["string", "number", "boolean", "float"],
-      correct: 3,
-    },
-    {
-      id: 3,
-      text: "Apa fungsi dari `git push`?",
-      options: [
-        "Mengunduh perubahan dari remote",
-        "Mengunggah commit ke remote repository",
-        "Membuat branch baru",
-        "Menghapus file dari staging",
-      ],
-      correct: 1,
-    },
-  ];
+  // Load soal & durasi dari localStorage
+  useEffect(() => {
+    const savedQuestions = JSON.parse(localStorage.getItem('coconut_test_questions')) || [
+      // Fallback
+      {
+        id: 1,
+        text: "Apa output dari kode Python berikut?\nprint(2 ** 3 + 1)",
+        options: ["9", "7", "8", "10"],
+        correct: 0,
+      },
+      {
+        id: 2,
+        text: "Manakah yang BUKAN tipe data di JavaScript?",
+        options: ["string", "number", "boolean", "float"],
+        correct: 3,
+      },
+    ];
+
+    const durationInMinutes = parseInt(localStorage.getItem('coconut_test_duration')) || 30;
+    const totalSeconds = durationInMinutes * 60;
+
+    setQuestions(savedQuestions);
+    setTimeLeft(totalSeconds);
+  }, []);
 
   // Timer
   useEffect(() => {
-    if (submitted || timeLeft <= 0) return;
+    if (submitted || timeLeft <= 0 || questions.length === 0) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [submitted, timeLeft]);
+  }, [submitted, timeLeft, questions.length]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -73,10 +80,19 @@ export default function SoalTesPage() {
   };
 
   const handleSubmit = () => {
-    if (window.confirm('Anda yakin ingin mengirim jawaban?')) {
+    if (submitted) return;
+    if (window.confirm('Waktu habis atau Anda yakin ingin mengirim jawaban?')) {
       setSubmitted(true);
     }
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Soal belum tersedia.</p>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -105,18 +121,20 @@ export default function SoalTesPage() {
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <FadeIn>
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-blue-900">
-                Soal Tes
-              </h1>
-              <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold">
-                {formatTime(timeLeft)}
-              </div>
-            </div>
-            <p className="text-lg text-gray-600 mb-10">
-              Jawab semua soal di bawah ini. Anda dapat berpindah antar soal sebelum mengirim.
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+              Ujian Pilihan Ganda
+            </h1>
+            <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
+              Jawab semua soal dengan cermat. Waktu terbatas: {formatTime(timeLeft)}
             </p>
           </FadeIn>
+
+          {/* Timer Progress */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-sky-200">
+              <span className="text-lg font-semibold text-blue-800">⏰ {formatTime(timeLeft)}</span>
+            </div>
+          </div>
 
           <SlideUp delay={200}>
             <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">

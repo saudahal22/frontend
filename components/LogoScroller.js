@@ -21,7 +21,7 @@ export default function LogoScroller() {
       "/slider/git.svg",
       "/slider/java-brands-solid-full.svg",
       "/slider/linux-brands-solid-full.svg",
-      "/slider/openai.svg",
+      "/slider/openai.svg", 
       "/slider/python-brands-solid-full.svg",
       "/slider/react-brands-solid-full.svg",
       "/slider/square-js-brands-solid-full.svg",
@@ -31,7 +31,7 @@ export default function LogoScroller() {
     const logoCount = 16;
     const logoWidth = 65;
     const spacing = 16;
-    const speed = 1.2;
+    const speed = 0.5;
 
     const logos = [];
 

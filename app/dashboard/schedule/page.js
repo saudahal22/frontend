@@ -2,16 +2,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 
 export default function SchedulePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn] = useState(true); // Simulasi login
+  const [testSchedule, setTestSchedule] = useState([]);
 
-  const [testSchedule] = useState([
-    { date: '20 Agustus 2025', time: '09:00 - 11:00', location: 'Algo Cofee dan Snack' , keterangan: 'Tes Soal'},
-    { date: '25 Agustus 2025', time: '13:00 - 15:00', location: 'Algo Cofee dan Snack', keterangan: 'Tes Wawancara' },
-  ]);
+  // Load jadwal dari localStorage
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('coconut_test_schedules')) || [
+      // Fallback jika belum ada data
+      {
+        id: 1,
+        date: '20 Agustus 2025',
+        time: '09:00 - 11:00',
+        location: 'Algo Cofee dan Snack',
+        keterangan: 'Tes Soal',
+      },
+      {
+        id: 2,
+        date: '25 Agustus 2025',
+        time: '13:00 - 15:00',
+        location: 'Algo Cofee dan Snack',
+        keterangan: 'Tes Wawancara',
+      },
+    ];
+    setTestSchedule(saved);
+  }, []);
 
   if (!isLoggedIn) {
     return (
@@ -40,20 +57,30 @@ export default function SchedulePage() {
           <SlideUp delay={200}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
               <h2 className="text-2xl font-bold text-blue-900 mb-6">Daftar Jadwal Tes</h2>
-              {testSchedule.map((test, index) => (
-                <div key={index} className="p-6 bg-white/70 rounded-xl border border-sky-100 mb-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-gray-800">{test.date}</p>
-                      <p className="text-gray-600">{test.time} | {test.location}</p>
-                        <p className="text-gray-600">Keterangan: {test.keterangan}</p>
+
+              {testSchedule.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">Belum ada jadwal yang tersedia.</p>
+              ) : (
+                testSchedule.map((test, index) => (
+                  <div
+                    key={test.id || index}
+                    className="p-6 bg-white/70 rounded-xl border border-sky-100 mb-4 last:mb-0"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                      <div>
+                        <p className="font-semibold text-gray-800 text-lg">{test.date}</p>
+                        <p className="text-gray-600">{test.time} | {test.location}</p>
+                        <p className="text-gray-600 mt-1">
+                          <strong>Keterangan:</strong> {test.keterangan}
+                        </p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium self-start sm:self-auto">
+                        Dikonfirmasi
+                      </span>
                     </div>
-                    <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
-                      Dikonfirmasi
-                    </span>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </SlideUp>
         </div>
