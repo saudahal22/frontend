@@ -80,15 +80,15 @@ export default function SoalTesPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center py-24">
-        <div className="bg-white p-10 rounded-3xl shadow-xl max-w-lg text-center">
+      <div className="ml-10 min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center py-24">
+        <div className="bg-white p-10 rounded-3xl shadow-xl max-w-lg text-center ml-10">
           <h2 className="text-3xl font-bold text-green-600 mb-4">✅ Jawaban Terkirim!</h2>
           <p className="text-gray-700 mb-6">
             Terima kasih telah menyelesaikan tes. Hasil akan diumumkan melalui email dan WhatsApp.
           </p>
           <button
             onClick={() => setSubmitted(false)}
-            className="bg-sky-600 text-white px-6 py-2 rounded-full hover:bg-sky-700 transition"
+            className="bg-sky-600 text-white px-6 ml-10 py-2 rounded-full hover:bg-sky-700 transition"
           >
             Kembali
           </button>
@@ -101,7 +101,7 @@ export default function SoalTesPage() {
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 ml-10">
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <FadeIn>

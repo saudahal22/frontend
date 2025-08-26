@@ -38,13 +38,13 @@ export default function ProfilePage() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
               Profil Saya
             </h1>
-            <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
+            <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16 ml-10">
               Informasi pribadi Anda yang telah diisi saat mendaftar.
             </p>
           </FadeIn>
 
           <SlideUp delay={200}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+            <div className="ml-10 bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
                 <Image
                   src={profile.avatar}

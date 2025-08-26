@@ -21,7 +21,7 @@ export default function StatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 ml-10">
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <FadeIn>
