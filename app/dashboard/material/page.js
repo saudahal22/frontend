@@ -144,6 +144,7 @@ export default function SoalTesPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
+          <div className="flex justify-center"></div>
           <FadeIn>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
               Ujian Pilihan Ganda
@@ -152,6 +153,7 @@ export default function SoalTesPage() {
               Jawab semua soal dengan cermat. Waktu terbatas: {formatTime(timeLeft)}
             </p>
           </FadeIn>
+          
 
           {/* Timer Progress */}
           <div className="flex justify-center mb-8">
