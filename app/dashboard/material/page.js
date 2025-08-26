@@ -1,51 +1,58 @@
 // app/dashboard/material/page.js
 'use client';
 
-import { useState, useEffect } from 'react'; // ✅ Diperbaiki: tambah useEffect
+import { useState, useEffect } from 'react';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 
 export default function SoalTesPage() {
-  const [timeLeft, setTimeLeft] = useState(60 * 30); // 30 menit
+  const [timeLeft, setTimeLeft] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [questions, setQuestions] = useState([]);
 
-  const questions = [
-    {
-      id: 1,
-      text: "Apa output dari kode Python berikut?\nprint(2 ** 3 + 1)",
-      options: ["9", "7", "8", "10"],
-      correct: 0,
-    },
-    {
-      id: 2,
-      text: "Manakah yang BUKAN tipe data di JavaScript?",
-      options: ["string", "number", "boolean", "float"],
-      correct: 3,
-    },
-    {
-      id: 3,
-      text: "Apa fungsi dari `git push`?",
-      options: [
-        "Mengunduh perubahan dari remote",
-        "Mengunggah commit ke remote repository",
-        "Membuat branch baru",
-        "Menghapus file dari staging",
-      ],
-      correct: 1,
-    },
-  ];
+  // Load soal & durasi dari localStorage
+  useEffect(() => {
+    const savedQuestions = JSON.parse(localStorage.getItem('coconut_test_questions')) || [
+      // Fallback
+      {
+        id: 1,
+        text: "Apa output dari kode Python berikut?\nprint(2 ** 3 + 1)",
+        options: ["9", "7", "8", "10"],
+        correct: 0,
+      },
+      {
+        id: 2,
+        text: "Manakah yang BUKAN tipe data di JavaScript?",
+        options: ["string", "number", "boolean", "float"],
+        correct: 3,
+      },
+    ];
+
+    const durationInMinutes = parseInt(localStorage.getItem('coconut_test_duration')) || 30;
+    const totalSeconds = durationInMinutes * 60;
+
+    setQuestions(savedQuestions);
+    setTimeLeft(totalSeconds);
+  }, []);
 
   // Timer
   useEffect(() => {
-    if (submitted || timeLeft <= 0) return;
+    if (submitted || timeLeft <= 0 || questions.length === 0) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [submitted, timeLeft]);
+  }, [submitted, timeLeft, questions.length]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -73,10 +80,19 @@ export default function SoalTesPage() {
   };
 
   const handleSubmit = () => {
-    if (window.confirm('Anda yakin ingin mengirim jawaban?')) {
+    if (submitted) return;
+    if (window.confirm('Waktu habis atau Anda yakin ingin mengirim jawaban?')) {
       setSubmitted(true);
     }
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Soal belum tersedia.</p>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
