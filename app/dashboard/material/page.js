@@ -10,11 +10,11 @@ export default function SoalTesPage() {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [isStarted, setIsStarted] = useState(false); // ✅ Apakah ujian sudah dimulai
 
   // Load soal & durasi dari localStorage
   useEffect(() => {
     const savedQuestions = JSON.parse(localStorage.getItem('coconut_test_questions')) || [
-      // Fallback
       {
         id: 1,
         text: "Apa output dari kode Python berikut?\nprint(2 ** 3 + 1)",
@@ -36,9 +36,9 @@ export default function SoalTesPage() {
     setTimeLeft(totalSeconds);
   }, []);
 
-  // Timer
+  // Timer (hanya jalan jika ujian dimulai dan belum selesai)
   useEffect(() => {
-    if (submitted || timeLeft <= 0 || questions.length === 0) return;
+    if (!isStarted || submitted || timeLeft <= 0 || questions.length === 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -52,7 +52,7 @@ export default function SoalTesPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [submitted, timeLeft, questions.length]);
+  }, [isStarted, submitted, timeLeft, questions.length]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -81,9 +81,11 @@ export default function SoalTesPage() {
 
   const handleSubmit = () => {
     if (submitted) return;
-    if (window.confirm('Waktu habis atau Anda yakin ingin mengirim jawaban?')) {
-      setSubmitted(true);
-    }
+    setSubmitted(true);
+  };
+
+  const handleStart = () => {
+    setIsStarted(true); // ✅ Mulai ujian
   };
 
   if (questions.length === 0) {
@@ -96,17 +98,39 @@ export default function SoalTesPage() {
 
   if (submitted) {
     return (
-      <div className="ml-10 min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center py-24">
-        <div className="bg-white p-10 rounded-3xl shadow-xl max-w-lg text-center ml-10">
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center py-24">
+        <div className="bg-white p-10 rounded-3xl shadow-xl max-w-lg text-center">
           <h2 className="text-3xl font-bold text-green-600 mb-4">✅ Jawaban Terkirim!</h2>
           <p className="text-gray-700 mb-6">
             Terima kasih telah menyelesaikan tes. Hasil akan diumumkan melalui email dan WhatsApp.
           </p>
           <button
             onClick={() => setSubmitted(false)}
-            className="bg-sky-600 text-white px-6 ml-10 py-2 rounded-full hover:bg-sky-700 transition"
+            className="bg-sky-600 text-white px-6 py-2 rounded-full hover:bg-sky-700 transition"
           >
             Kembali
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center py-24">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-lg text-center">
+          <h2 className="text-3xl font-bold text-blue-900 mb-4">Ujian Pilihan Ganda</h2>
+          <p className="text-gray-600 mb-6">
+            Anda akan mengerjakan {questions.length} soal dalam waktu <strong>{formatTime(timeLeft)}</strong>.
+          </p>
+          <p className="text-gray-500 text-sm mb-8">
+            Pastikan koneksi stabil dan tidak meninggalkan halaman selama ujian.
+          </p>
+          <button
+            onClick={handleStart}
+            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:from-sky-600 hover:to-blue-700 transition shadow-md"
+          >
+            🚀 Mulai Ujian
           </button>
         </div>
       </div>
@@ -117,7 +141,7 @@ export default function SoalTesPage() {
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 ml-10">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <main className="relative overflow-hidden py-24">
         <div className="container mx-auto px-6 max-w-6xl">
           <FadeIn>
