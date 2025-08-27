@@ -2,9 +2,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import Image from "next/image";
 import { FadeIn, SlideUp } from "../../../components/Animations";
-import { apiClient } from "../../../lib/apiClient"; // ✅ Gunakan apiClient
+import { apiClient } from "../../../lib/apiClient";
 
 export default function ProfilePage() {
   const [isLoggedIn] = useState(true);
@@ -13,8 +13,9 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [fullName, setFullName] = useState(""); // Untuk input edit nama
 
-  // 🔹 Ambil API URL dari .env.local
+  // 🔹 Ambil API URL dari environment
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://cocopen-production.up.railway.app";
 
   const fetchProfile = async () => {
@@ -26,7 +27,7 @@ export default function ProfilePage() {
         email: data.email || data.Email,
         statusKeanggotaan: data.status_keanggotaan || data.StatusKeanggotaan,
         profilePicture: data.profile_picture
-          ? `${API_URL}/uploads/profile/${data.profile_picture}` // ✅ Gunakan API_URL
+          ? `${API_URL}/uploads/profile/${data.profile_picture}`
           : "/default-avatar.png",
         tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung,
       });
@@ -57,24 +58,47 @@ export default function ProfilePage() {
   }, []);
 
   const handleProfileClick = () => {
+    setFullName(profile.fullName); // Isi input dengan nama saat ini
     setIsEditing(true);
   };
 
   const closeModal = () => {
     setIsEditing(false);
     setError("");
+    setFullName("");
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+
+    // Validasi nama
+    if (!fullName.trim()) {
+      setError("Nama lengkap wajib diisi");
+      return;
+    }
+
+    // Validasi file jika ada
+    if (file) {
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        setError("Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Ukuran file maksimal 5MB.");
+        return;
+      }
+    }
 
     setUploading(true);
     setError("");
 
     const formData = new FormData();
-    formData.append("full_name", profile.fullName);
-    formData.append("profile_picture", file);
+    formData.append("full_name", fullName.trim());
+
+    if (file) {
+      formData.append("profile_picture", file);
+    }
 
     try {
       const result = await apiClient("/profile/update", {
@@ -82,20 +106,22 @@ export default function ProfilePage() {
         body: formData,
       });
 
+      const updatedName = result.data?.full_name;
       const uploadedFileName = result.data?.profile_picture;
 
-      if (uploadedFileName) {
-        setProfile((prev) => ({
-          ...prev,
-          profilePicture: `${API_URL}/uploads/profile/${uploadedFileName}?t=${Date.now()}`, // ✅ Gunakan API_URL
-        }));
-      }
+      setProfile((prev) => ({
+        ...prev,
+        fullName: updatedName || prev.fullName,
+        profilePicture: uploadedFileName
+          ? `${API_URL}/uploads/profile/${uploadedFileName}?t=${Date.now()}`
+          : prev.profilePicture,
+      }));
 
       alert("Profil berhasil diperbarui!");
     } catch (err) {
       console.error("Gagal update profil:", err);
-      setError(err.message);
-      alert("Gagal mengunggah foto. Cek format (JPG/PNG) dan ukuran file.");
+      setError(err.message || "Gagal memperbarui profil.");
+      alert("Gagal menyimpan perubahan. Cek koneksi Anda.");
     } finally {
       setUploading(false);
       closeModal();
@@ -107,9 +133,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800">Akses Ditolak</h2>
-          <p className="text-gray-600">
-            Anda harus masuk untuk melihat profil.
-          </p>
+          <p className="text-gray-600">Anda harus masuk untuk melihat profil.</p>
         </div>
       </div>
     );
@@ -143,7 +167,6 @@ export default function ProfilePage() {
                   className="relative cursor-pointer group"
                   onClick={handleProfileClick}
                 >
-                  {/* ✅ Gunakan <img> karena upload lokal */}
                   <img
                     src={profile.profilePicture}
                     alt="Profil"
@@ -153,7 +176,7 @@ export default function ProfilePage() {
                   />
                   <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                     <span className="text-white text-xs font-medium">
-                      Ganti Foto
+                      Edit Profil
                     </span>
                   </div>
                 </div>
@@ -176,16 +199,27 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* Modal Ganti Foto */}
+      {/* Modal Edit Profil */}
       {isEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
-              Ganti Foto Profil
-            </h3>
-            <p className="text-sm text-gray-600 mb-5">
-              Format: JPG, JPEG, PNG (maks 5MB)
-            </p>
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Profil</h3>
+
+            {/* Input Nama Lengkap */}
+            <div className="mb-4">
+              <label className="block text-left text-sm font-medium text-gray-700 mb-1">
+                Nama Lengkap
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                placeholder="Masukkan nama lengkap"
+              />
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">Atau ganti foto profil:</p>
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
 
