@@ -9,21 +9,18 @@ export default function AuthWrapper({ children, requiredRole = null }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
-    // 🔴 Cek: apakah sudah login?
+
     if (!token) {
-      alert('Silakan login terlebih dahulu.');
+      // Redirect ke login, tapi tetap render children dulu
       router.push('/login');
       return;
     }
 
-    // 🔍 Decode token
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       
-      // 🔒 Cek role jika diperlukan
       if (requiredRole && payload.role !== requiredRole) {
-        alert('Akses ditolak: Anda tidak memiliki izin.');
+        // Redirect ke halaman sesuai role
         if (payload.role === 'admin') {
           router.push('/admin-dashboard');
         } else {
@@ -32,18 +29,19 @@ export default function AuthWrapper({ children, requiredRole = null }) {
         return;
       }
 
-      // 🔁 Jika admin buka dashboard user → redirect ke admin
-      if (!requiredRole && payload.role === 'admin') {
+      // Jika admin membuka halaman biasa, arahkan ke dashboard
+      if (!requiredRole && payload.role === 'admin' && !router.pathname.startsWith('/admin-dashboard')) {
         router.push('/admin-dashboard');
         return;
       }
     } catch (e) {
-      // Token rusak
-      alert('Sesi tidak valid. Silakan login ulang.');
+      console.error("Gagal decode token:", e);
       localStorage.clear();
       router.push('/login');
+      return;
     }
-  }, [router, requiredRole]);
+  }, [router]);
 
+  // ✅ Render children selalu, meskipun sedang redirect
   return <>{children}</>;
 }
