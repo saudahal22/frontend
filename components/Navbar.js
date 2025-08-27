@@ -10,6 +10,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Cek status login
   const checkLoginStatus = () => {
@@ -24,14 +25,17 @@ export default function Navbar() {
       setIsScrolled(window.scrollY > 50);
     };
     handleScroll();
+
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('storage', checkLoginStatus);
+
+    setLoading(false);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('storage', checkLoginStatus);
     };
-  }, []);
+  }, [pathname]);
 
   const handleLogout = () => {
     if (confirm('Apakah Anda yakin ingin keluar dari akun Anda?')) {
@@ -39,21 +43,24 @@ export default function Navbar() {
       localStorage.removeItem('token');
       setIsLoggedIn(false);
       setIsOpen(false);
-      // Opsional: redirect ke beranda
-      window.location.href = '/'; // atau router.push('/')
+      window.dispatchEvent(new Event("storage")); // update Navbar
+      window.location.href = '/';
     }
   };
+
+  if (loading) return null; // biar tidak flicker saat pertama render
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-  isScrolled
-    ? 'bg-white shadow-lg py-2'  
-    : 'bg-white shadow-lg py-2'  
-}`}
+        isScrolled
+          ? 'bg-white shadow-lg py-2'
+          : 'bg-white shadow-lg py-2'
+      }`}
     >
       {/* Desktop Navbar */}
       <div className="hidden sm:flex items-center justify-between px-6 md:px-16">
+        {/* Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image
@@ -67,6 +74,7 @@ export default function Navbar() {
           </Link>
         </div>
 
+        {/* Menu Links */}
         <div className="flex space-x-6 text-center pl-10">
           {[
             { href: '/', label: 'Beranda' },
@@ -97,6 +105,7 @@ export default function Navbar() {
           })}
         </div>
 
+        {/* Right Side */}
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
             <div className="relative group">
@@ -106,7 +115,7 @@ export default function Navbar() {
                 aria-label="Profil Pengguna"
               >
                 <Image
-                  src="/slider/saudahlatarbiru.png" // ✅ Ganti dengan avatar nyata
+                  src="/slider/saudahlatarbiru.png" // ✅ avatar user
                   alt="Profil Pengguna"
                   width={40}
                   height={40}
@@ -152,8 +161,8 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Header: Hamburger di kanan, Logo di kiri */}
-      <div className="sm:hidden flex items-center justify-between px-4 ">
+      {/* Mobile Header */}
+      <div className="sm:hidden flex items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/logococonut1.png"
@@ -187,7 +196,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="sm:hidden bg-white/95 backdrop-blur-md border-t border-gray-200">
           <div className="px-4 pt-2 pb-4 space-y-2 text-center">
