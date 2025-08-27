@@ -1,25 +1,71 @@
-// app/dashboard/layout.js
+// app/admin-dashboard/page.js
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Sidebar from '../../components/Sidebar-admin';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // ⬅️ tambahkan ini
+import { FadeIn, SlideUp } from '../../components/Animations';
+// ... import lainnya (AreaChart, Icons, dll)
 
+export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const router = useRouter(); // ⬅️ inisialisasi router
+  const [stats, setStats] = useState({ /* ... */ });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [registrationData, setRegistrationData] = useState([]);
 
-export default function DashboardLayout({ children }) {
-  const pathname = usePathname();
+  // 🔐 Fungsi decode token
+  const decodeToken = (token) => {
+    try {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      return null;
+    }
+  };
 
-  // Hanya gunakan layout ini di rute /dashboard
-  if (!pathname.startsWith('/admin-dashboard')) return children;
+  const fetchData = async () => {
+    try {
+      const pendaftarRes = await apiClient('/pendaftar/all');
+      // ... ambil data lainnya
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar />
+  useEffect(() => {
+    const token = localStorage.getItem('token');
 
-      {/* Konten Utama (tanpa Navbar) */}
-      <div className="flex-1 lg:ml-64 min-h-screen bg-white">
-        <main className="pt-10 px-6 py-8">{children}</main>
-      </div>
-    </div>
-  );
+    // 🔴 Cek: apakah ada token?
+    if (!token) {
+      alert('Akses ditolak: Silakan login terlebih dahulu');
+      router.push('/login');
+      return;
+    }
+
+    // 🔴 Cek: apakah role admin?
+    const decoded = decodeToken(token);
+    if (!decoded) {
+      alert('Token tidak valid. Silakan login ulang.');
+      localStorage.clear();
+      router.push('/login');
+      return;
+    }
+
+    if (decoded.role !== 'admin') {
+      alert('Akses ditolak: Anda tidak memiliki izin sebagai admin');
+      router.push('/'); // atau ke halaman user
+      return;
+    }
+
+    // ✅ Jika lolos semua cek, baru ambil data
+    fetchData();
+
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [router]);
+
+  // ... render halaman (sudah ada)
 }
