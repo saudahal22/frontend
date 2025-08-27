@@ -14,6 +14,9 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
+  // 🔹 Ambil API URL dari .env.local
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://cocopen-production.up.railway.app";
+
   const fetchProfile = async () => {
     try {
       const data = await apiClient("/profile");
@@ -23,7 +26,7 @@ export default function ProfilePage() {
         email: data.email || data.Email,
         statusKeanggotaan: data.status_keanggotaan || data.StatusKeanggotaan,
         profilePicture: data.profile_picture
-          ? `/uploads/profile/${data.profile_picture}`
+          ? `${API_URL}/uploads/profile/${data.profile_picture}` // ✅ Gunakan API_URL
           : "/default-avatar.png",
         tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung,
       });
@@ -84,7 +87,7 @@ export default function ProfilePage() {
       if (uploadedFileName) {
         setProfile((prev) => ({
           ...prev,
-          profilePicture: `/uploads/profile/${uploadedFileName}?t=${Date.now()}`,
+          profilePicture: `${API_URL}/uploads/profile/${uploadedFileName}?t=${Date.now()}`, // ✅ Gunakan API_URL
         }));
       }
 
@@ -140,6 +143,7 @@ export default function ProfilePage() {
                   className="relative cursor-pointer group"
                   onClick={handleProfileClick}
                 >
+                  {/* ✅ Gunakan <img> karena upload lokal */}
                   <img
                     src={profile.profilePicture}
                     alt="Profil"
