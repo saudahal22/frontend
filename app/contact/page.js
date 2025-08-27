@@ -2,7 +2,6 @@
 "use client";
 
 import Footer from "../../components/Footer";
-import Navbar from "../../components/Navbar";
 import { FadeIn, SlideUp } from "../../components/Animations";
 import { useState, useRef, useEffect } from "react";
 

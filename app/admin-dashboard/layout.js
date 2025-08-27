@@ -38,7 +38,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    // 🔴 Cek: apakah ada token?
     if (!token) {
       alert('Akses ditolak: Silakan login terlebih dahulu');
       router.push('/login');
