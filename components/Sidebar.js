@@ -12,7 +12,6 @@ export default function Sidebar() {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const menuItems = [
-<<<<<<< HEAD
     { 
       href: '/', 
       label: 'Beranda', 
@@ -80,7 +79,6 @@ export default function Sidebar() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6H5v6h4zm0 0V9h4v10H9zm4 0h4v-6h-4v6zm0 0V5h4v14h-4z" />
       </svg>
     ) },
->>>>>>> 4460055341753acf1d70f555108044e6bd4c2128
   ];
 
   return (
