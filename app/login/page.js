@@ -7,7 +7,6 @@ import { FadeIn, SlideUp } from '../../components/Animations';
 import Spinner from '../../components/Spinner';
 import { apiClient } from '../../lib/apiClient';
 import { useRouter } from 'next/navigation';
-import jwtDecode from 'jwt-decode'; // ✅ Sekarang dipakai sebagai fallback
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -16,65 +15,48 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // LoginPage.js - handleSubmit
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!username || !password) {
-      setError('Semua field wajib diisi');
-      return;
+  if (!username || !password) {
+    setError('Semua field wajib diisi');
+    return;
+  }
+
+  setError('');
+  setLoading(true);
+
+  try {
+    const data = await apiClient('/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (data.token) {
+      localStorage.setItem('token', data.token);
     }
 
-    setError('');
-    setLoading(true);
-
-    try {
-      const data = await apiClient('/login', {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      });
-
-      // ✅ Simpan token
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      let user = null;
-
-      // 🎯 Coba ambil user dari respons dulu
-      if (data.user) {
-        user = data.user;
-        localStorage.setItem('coconut_user', JSON.stringify(data.user));
-      }
-      // 🔁 Fallback: decode token jika user tidak dikirim
-      else if (data.token) {
-        const decoded = jwtDecode(data.token);
-        user = {
-          id: decoded.id,
-          username: decoded.username,
-          fullName: decoded.fullName,
-          role: decoded.role,
-          profilePicture: decoded.picture || '',
-        };
-        localStorage.setItem('coconut_user', JSON.stringify(user));
-      }
-
-      // 🔔 Trigger event agar Navbar tahu user login
-      window.dispatchEvent(new Event('storage'));
-
-      // 🚀 Redirect berdasarkan role
-      if (user?.role === 'admin') {
-        router.push('/admin-dashboard');
-      } else {
-        router.push('/');
-      }
-
-      router.refresh();
-    } catch (err) {
-      setError(err.message || 'Login gagal. Cek kembali data Anda.');
-    } finally {
-      setLoading(false);
+    if (data.user) {
+      localStorage.setItem('coconut_user', JSON.stringify(data.user));
     }
-  };
+
+    window.dispatchEvent(new Event('storage'));
+
+    // 🔁 Redirect berdasarkan role
+    if (data.user?.role === 'admin') {
+      router.push('/admin-dashboard');
+    } else {
+      router.push('/');
+    }
+
+    router.refresh();
+  } catch (err) {
+    setError(err.message || 'Login gagal. Periksa kembali username dan password.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
