@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LogoScroller from "../components/LogoScroller";
@@ -8,12 +9,22 @@ import Link from "next/link";
 import { FadeIn, SlideUp } from "../components/Animations";
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Cek apakah token ada di localStorage saat halaman dimuat
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <Navbar />
 
       <main className="relative overflow-hidden">
-       {/* Hero Section */}
+        {/* Hero Section */}
         <section className="relative py-24 text-center">
           <div className="container mx-auto px-6">
             <FadeIn>
@@ -32,22 +43,36 @@ export default function HomePage() {
                   Computer Club Oriented Network, Utility & Technology
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 text-sm text-sky-600 font-medium">
-                  <span className="px-4 py-2 bg-sky-100/80 rounded-full">Research & Development</span>
-                  <span className="px-4 py-2 bg-blue-100/80 rounded-full">Innovation Hub</span>
-                  <span className="px-4 py-2 bg-sky-100/80 rounded-full">Academic Collaboration</span>
+                  <span className="px-4 py-2 bg-sky-100/80 rounded-full">
+                    Research & Development
+                  </span>
+                  <span className="px-4 py-2 bg-blue-100/80 rounded-full">
+                    Innovation Hub
+                  </span>
+                  <span className="px-4 py-2 bg-sky-100/80 rounded-full">
+                    Academic Collaboration
+                  </span>
                 </div>
               </div>
-                      <div>
-          <button className="bottom-4 right-4 bg-sky-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-sky-700 transition-colors duration-300">
-            <Link href="/register" className="flex items-center gap-2"> 
-              Bergabung Sekarang</Link>
-          </button>
-        </div>
+
+              {/* ✅ Tombol hanya muncul jika sudah login */}
+              {isLoggedIn && (
+                <div>
+                  <button className="bg-sky-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-sky-700 transition-colors duration-300 font-medium">
+                    <Link href="/register" className="flex items-center gap-2">
+                      Bergabung Sekarang
+                    </Link>
+                  </button>
+                </div>
+              )}
             </FadeIn>
           </div>
         </section>
 
-       {/* Jurusan Section */}
+        {/* Sisa konten lainnya (Jurusan, Apa itu Coconut, dll) */}
+        {/* ... (tidak diubah) */}
+        
+        {/* Jurusan Section */}
         <section className="relative py-24 bg-gradient-to-r from-white/90 to-sky-50/90">
           <div className="container mx-auto ">
             {/* Logo Scroller */}
@@ -63,7 +88,7 @@ export default function HomePage() {
             </div>
             <FadeIn>
               <div className=" mt-10">
-                 <h2 className="text-4xl md:text-5xl text-center font-bold font-playfair mb-6">
+                <h2 className="text-4xl md:text-5xl text-center font-bold font-playfair mb-6">
                   <span className="bg-gradient-to-r from-sky-600 via-blue-800 to-sky-700 hover:bg-gradient-to-r hover:from-blue-800 hover:via-sky-600 hover:to-blue-900 bg-clip-text text-transparent">
                     Fokus Yang Tersedia
                   </span>
@@ -86,9 +111,15 @@ export default function HomePage() {
                     className="h-28 md:h-28 object-contain"
                   />
                 </div>
-                <h1 className="text-lg text-black md:text-xl font-bold mb-2">BACKEND</h1>
+                <h1 className="text-lg text-black md:text-xl font-bold mb-2">
+                  BACKEND
+                </h1>
                 <p className="text-sm md:text-base text-black">
-                  Backend developer membangun logika aplikasi, mengelola data, menjaga keamanan, menghubungkan frontend, mengoptimalkan server, mengintegrasikan layanan pihak ketiga, dan memastikan aplikasi berjalan cepat, stabil, serta aman digunakan pengguna.
+                  Backend developer membangun logika aplikasi, mengelola data,
+                  menjaga keamanan, menghubungkan frontend, mengoptimalkan
+                  server, mengintegrasikan layanan pihak ketiga, dan memastikan
+                  aplikasi berjalan cepat, stabil, serta aman digunakan
+                  pengguna.
                 </p>
               </div>
 
@@ -102,9 +133,15 @@ export default function HomePage() {
                     className="h-28 md:h-28 object-contain"
                   />
                 </div>
-                <h1 className="text-lg text-black md:text-xl font-bold mb-2">SYSTEM</h1>
+                <h1 className="text-lg text-black md:text-xl font-bold mb-2">
+                  SYSTEM
+                </h1>
                 <p className="text-sm md:text-base text-black">
-                  System engineer merancang, mengelola, dan memelihara infrastruktur teknologi, memastikan integrasi sistem, mengoptimalkan kinerja, menjaga keamanan jaringan, serta mendukung operasional agar layanan berjalan efisien, handal, dan berkelanjutan.
+                  System engineer merancang, mengelola, dan memelihara
+                  infrastruktur teknologi, memastikan integrasi sistem,
+                  mengoptimalkan kinerja, menjaga keamanan jaringan, serta
+                  mendukung operasional agar layanan berjalan efisien, handal,
+                  dan berkelanjutan.
                 </p>
               </div>
 
@@ -118,9 +155,15 @@ export default function HomePage() {
                     className="h-28 md:h-28 object-contain"
                   />
                 </div>
-                <h1 className="text-lg text-black md:text-xl font-bold mb-2">FRONTEND</h1>
+                <h1 className="text-lg text-black md:text-xl font-bold mb-2">
+                  FRONTEND
+                </h1>
                 <p className="text-sm md:text-base text-black">
-                  Frontend developer merancang dan membangun antarmuka pengguna, mengoptimalkan pengalaman visual, mengimplementasikan desain responsif, memastikan interaksi berjalan lancar, serta menghubungkan tampilan dengan data agar aplikasi mudah digunakan dan menarik.
+                  Frontend developer merancang dan membangun antarmuka pengguna,
+                  mengoptimalkan pengalaman visual, mengimplementasikan desain
+                  responsif, memastikan interaksi berjalan lancar, serta
+                  menghubungkan tampilan dengan data agar aplikasi mudah
+                  digunakan dan menarik.
                 </p>
               </div>
             </div>
@@ -149,74 +192,77 @@ export default function HomePage() {
             <div className="mb-12"></div>
 
             {/* Bagian Gambar */}
-                  <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-                    <SlideUp delay={200}>
-                    <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
-                      <Image
-                      src="/coconut1.png"
-                      alt="Instructors"
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 opacity-40"></div>
-                    </div>
-                    </SlideUp>
+            <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+              <SlideUp delay={200}>
+                <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
+                  <Image
+                    src="/coconut1.png"
+                    alt="Instructors"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 opacity-40"></div>
+                </div>
+              </SlideUp>
 
-                    <SlideUp delay={400}>
-                    <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
-                      <Image
-                      src="/coconut2.png"
-                      alt="Students"
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 opacity-40"></div>
-                    </div>
-                    </SlideUp>
-                  </div>
+              <SlideUp delay={400}>
+                <div className="relative rounded-[15px] hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden w-full md:w-[500px] md:h-[320px] h-64 group">
+                  <Image
+                    src="/coconut2.png"
+                    alt="Students"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 opacity-40"></div>
+                </div>
+              </SlideUp>
+            </div>
 
-                  <div className="mt-20"></div>
+            <div className="mt-20"></div>
 
-                  {/* Kotak CTA */}
+            {/* Kotak CTA */}
             <SlideUp delay={600}>
               <div className="max-w-7xl   mx-auto">
                 {/* Flex layout dari kode pertama, dibungkus dalam gradient card */}
-               
-                  <section className="flex flex-col md:flex-row  md:px- gap-8 md:gap-20">
-                    {/* Bagian Teks */}
-                    <div className="flex-1 ">
-                      {/* Lingkaran dekoratif */}
-                      <div className="bg-amber-400 rounded-full mt-15 w-15 h-15 mb-[-38px] ml-[-20px]"></div>
 
-                      {/* Judul */}
-                      <div className="flex items-center mb-2">
-                        <h2 className="text-[#08314f] font-semibold text-[27px] md:mr-15 leading-tight">
-                          Pembelajaran yang biasa Anda lakukan di <br /> kampus,
-                          <span className="text-[#44CDFF]">
-                            {" "}
-                            akan tetap terasa sama di COCONUT
-                          </span>
-                        </h2>
-                      </div>
+                <section className="flex flex-col md:flex-row  md:px- gap-8 md:gap-20">
+                  {/* Bagian Teks */}
+                  <div className="flex-1 ">
+                    {/* Lingkaran dekoratif */}
+                    <div className="bg-amber-400 rounded-full mt-15 w-15 h-15 mb-[-38px] ml-[-20px]"></div>
 
-                      {/* Paragraf */}
-                      <p className="text-black md:mt-12 leading-relaxed max-w-md">
-                        Study club Coconut berfokus pada bidang IT, Kami menyediakan lingkungan yang suportif dan memotivasi untuk mendorong inovasi, mengembangkan teknologi canggih, dan berkontribusi pada kemajuan Indonesia sebagai ekonomi berbasis pengetahuan.
-                      </p>
+                    {/* Judul */}
+                    <div className="flex items-center mb-2">
+                      <h2 className="text-[#08314f] font-semibold text-[27px] md:mr-15 leading-tight">
+                        Pembelajaran yang biasa Anda lakukan di <br /> kampus,
+                        <span className="text-[#44CDFF]">
+                          {" "}
+                          akan tetap terasa sama di COCONUT
+                        </span>
+                      </h2>
                     </div>
 
-                    {/* Bagian Gambar */}
-                    <div className="flex-1 mt-10 ">
-                      <Image
-                        src="/Coding workshop-rafiki.png"
-                        alt="Coding Workshop"
-                        width={500}
-                        height={400}
-                        className="w-full h-auto md:mt-[-90px] md:ml-12 rounded-lg"
-                      />
-                    </div>
-                  </section>
-                
+                    {/* Paragraf */}
+                    <p className="text-black md:mt-12 leading-relaxed max-w-md">
+                      Study club Coconut berfokus pada bidang IT, Kami
+                      menyediakan lingkungan yang suportif dan memotivasi untuk
+                      mendorong inovasi, mengembangkan teknologi canggih, dan
+                      berkontribusi pada kemajuan Indonesia sebagai ekonomi
+                      berbasis pengetahuan.
+                    </p>
+                  </div>
+
+                  {/* Bagian Gambar */}
+                  <div className="flex-1 mt-10 ">
+                    <Image
+                      src="/Coding workshop-rafiki.png"
+                      alt="Coding Workshop"
+                      width={500}
+                      height={400}
+                      className="w-full h-auto md:mt-[-90px] md:ml-12 rounded-lg"
+                    />
+                  </div>
+                </section>
               </div>
             </SlideUp>
           </div>
@@ -320,7 +366,6 @@ export default function HomePage() {
           color: transparent;
         }
       `}</style>
-
 
       <Footer />
     </div>
