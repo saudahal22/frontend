@@ -284,15 +284,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Lupa Password */}
-                <div className="text-right">
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-sky-600 hover:underline hover:text-sky-800 transition"
-                  >
-                    Lupa Password?
-                  </Link>
-                </div>
+               
 
                 {/* Submit Button */}
                 <button
