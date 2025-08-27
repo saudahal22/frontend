@@ -1,12 +1,13 @@
 // components/Sidebar.js
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation'; // ← Tambahkan useRouter
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter(); // ← Inisialisasi router
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -97,14 +98,14 @@ export default function Sidebar() {
             const isActive = pathname === item.href;
             return (
               <Link
-                key={item.href} // ✅ Key unik berdasarkan href
+                key={item.href}
                 href={item.href}
                 className={`flex items-center px-3 py-2 text-sm rounded-lg mb-1 transition-all duration-200 ${
                   isActive
                     ? 'bg-sky-50 text-sky-800 border-r-4 border-sky-600'
                     : 'text-gray-700 hover:bg-sky-50 hover:text-sky-700'
                 }`}
-                onClick={() => setIsOpen(false)} // ✅ Tutup sidebar saat klik menu (mobile)
+                onClick={() => setIsOpen(false)}
               >
                 <span className={`${isActive ? 'text-sky-600' : 'text-gray-500'} mr-3`}>
                   {item.icon}
@@ -120,8 +121,8 @@ export default function Sidebar() {
           <button
             onClick={() => {
               if (confirm('Yakin ingin keluar dari akun Anda?')) {
-                localStorage.removeItem('coconut_user');
-                window.location.href = '/';
+                localStorage.removeItem('coconut_user'); // ✅ Key token kamu
+                router.push('/login'); // ✅ Redirect ke login dengan Next.js router
               }
             }}
             className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
