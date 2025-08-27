@@ -14,7 +14,7 @@ export default function Sidebar() {
   // ✅ Menu hanya sekali, tidak duplikat
   const menuItems = [
     { 
-      href: '/dashboard', 
+      href: '/', 
       label: 'Beranda', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
