@@ -95,8 +95,22 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
   const errorRef = useRef(null);
+
+  // Validasi username (minimal 3 karakter, hanya huruf, angka, underscore)
+  const isValidUsername = (str) => /^[a-zA-Z0-9_]{3,}$/.test(str);
+
+  // Validasi password (minimal 8 karakter, huruf besar, angka, simbol)
+  const isValidPassword = (str) => {
+    return (
+      str.length >= 8 &&
+      /[A-Z]/.test(str) &&
+      /\d/.test(str) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(str)
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,7 +119,7 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
 
-    // Validasi frontend
+    // Validasi frontend (lebih ketat, sesuai backend)
     if (!username || !email || !password || !confirmPassword) {
       setError("Semua field wajib diisi");
       errorRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -113,8 +127,24 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!isValidUsername(username)) {
+      setError("Username minimal 3 karakter, hanya huruf, angka, dan _");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
+      setLoading(false);
+      return;
+    }
+
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError("Format email tidak valid");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      setError(
+        "Password harus minimal 8 karakter, mengandung huruf besar, angka, dan simbol"
+      );
       errorRef.current?.scrollIntoView({ behavior: "smooth" });
       setLoading(false);
       return;
@@ -138,10 +168,22 @@ export default function RegisterPage() {
         }),
       });
 
-      // Tampilkan modal sukses
+      // Ambil pesan dari backend
+      const message = data.message || "Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi.";
+
+      setSuccessMessage(message);
       setShowSuccessModal(true);
+
+      // Reset form
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+
     } catch (err) {
-      setError(err.message || "Gagal mendaftar. Coba lagi.");
+      // Tampilkan pesan error dari backend
+      const errorMsg = err.message || "Gagal mendaftar. Coba lagi.";
+      setError(errorMsg);
       errorRef.current?.scrollIntoView({ behavior: "smooth" });
     } finally {
       setLoading(false);
@@ -257,7 +299,7 @@ export default function RegisterPage() {
                                focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
                                bg-white text-gray-900 placeholder-gray-500
                                transition duration-200 ease-in-out disabled:bg-gray-100"
-                    placeholder="Masukkan password"
+                    placeholder="Minimal 8 karakter, huruf besar, angka, simbol"
                     disabled={loading}
                   />
                 </div>
@@ -284,8 +326,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-               
-
                 {/* Submit Button */}
                 <button
                   type="submit"
@@ -304,6 +344,7 @@ export default function RegisterPage() {
                     "Register"
                   )}
                 </button>
+
                 <div className="mt-4 text-center text-sm">
                   <span className="text-gray-600">Sudah punya akun?</span>{" "}
                   <Link
@@ -327,7 +368,7 @@ export default function RegisterPage() {
           setShowSuccessModal(false);
           router.push("/login");
         }}
-        message="Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi."
+        message={successMessage || "Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi."}
       />
     </>
   );
