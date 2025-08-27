@@ -1,3 +1,4 @@
+// app/register/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,54 +23,22 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Loading saat cek auth
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(true);
   const router = useRouter();
 
-  // 🔹 Cek token saat komponen dimuat
+  // Cek status login saat halaman dimuat
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
+      // Redirect ke login jika belum login
       router.push('/login');
       return;
     }
 
-    // Opsional: Verifikasi token ke backend
-    fetch('/api/auth/verify', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error('Token tidak valid');
-      })
-      .then((data) => {
-        console.log('Token valid untuk:', data.user);
-      })
-      .catch((err) => {
-        console.error('Verifikasi token gagal:', err);
-        localStorage.removeItem('token');
-        alert('Sesi Anda telah habis. Silakan login kembali.');
-        router.push('/login');
-      })
-      .finally(() => {
-        setIsCheckingAuth(false);
-      });
+    setIsLoggedIn(true);
+    setLoadingPage(false);
   }, [router]);
-
-  // Tampilkan loading saat memverifikasi
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-sky-600 mb-3"></div>
-          <p className="text-gray-600">Memverifikasi sesi Anda...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -87,21 +56,19 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
 
-    // Validasi wajib
+    // Validasi frontend
     if (!formData.nama_lengkap || !formData.asal_kampus || !formData.prodi || !formData.no_wa) {
       setError('Nama, asal kampus, program studi, dan nomor WA wajib diisi.');
       setLoading(false);
       return;
     }
 
-    // Validasi nomor WA
     if (!/^[0-9]{9,13}$|^\+?62[0-9]{9,12}$/.test(formData.no_wa)) {
       setError('Nomor WA tidak valid (contoh: 08123456789)');
       setLoading(false);
       return;
     }
 
-    // Validasi foto
     if (!formData.foto) {
       setError('Foto wajib diunggah dalam format JPG/JPEG.');
       setLoading(false);
@@ -121,9 +88,8 @@ export default function RegisterPage() {
       return;
     }
 
-    // Siapkan FormData
     const formDataToSend = new FormData();
-    Object.keys(formData).forEach((key) => {
+    Object.keys(formData).forEach(key => {
       if (key !== 'foto') {
         formDataToSend.append(key, formData[key]);
       }
@@ -134,16 +100,32 @@ export default function RegisterPage() {
       await apiClient('/pendaftar/create', {
         method: 'POST',
         body: formDataToSend,
-        // ❌ Jangan set Content-Type — biarkan browser atur boundary
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       setShowSuccessModal(true);
     } catch (err) {
-      setError(err.message || 'Gagal mendaftar. Coba lagi nanti.');
+      setError(err.message || 'Gagal mendaftar. Coba lagi.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Tampilkan loading selama pengecekan login
+  if (loadingPage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <p className="text-lg text-gray-600">Memeriksa status login...</p>
+      </div>
+    );
+  }
+
+  // Jika sudah di-redirect, jangan render apapun
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
@@ -164,6 +146,7 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Input seperti sebelumnya */}
               <SlideUp delay={200}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
