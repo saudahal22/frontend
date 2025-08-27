@@ -1,4 +1,3 @@
-// app/admin-dashboard/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Users, Clock, CheckCircle2, Calendar, MessageCircle, FileText, TrendingUp } from 'lucide-react';
+import {
+  Users,
+  Clock,
+  CheckCircle2,
+  Calendar,
+  MessageCircle,
+  FileText,
+  TrendingUp,
+} from 'lucide-react';
 import { apiClient } from '../../lib/apiClient';
 import AuthWrapper from '../../components/AuthWrapper';
 
@@ -30,35 +37,34 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      // Tambahkan log untuk debug
-      console.log("Mengambil data pendaftar...");
+      console.log("Mengambil data untuk dashboard...");
+
       const pendaftarRes = await apiClient('/pendaftar/all');
-      const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
-      console.log("Pendaftar:", pendaftar);
-
       const jadwalRes = await apiClient('/jadwal/all');
-      const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
-      console.log("Jadwal:", jadwal);
-
       const hasilRes = await apiClient('/test/hasil');
+
+      const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
+      const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
       const hasil = Array.isArray(hasilRes) ? hasilRes : [];
-      console.log("Hasil Tes:", hasil);
+
+      console.log("Data diterima:", { pendaftar, jadwal, hasil });
 
       // Hitung statistik
       const total = pendaftar.length;
-      const pending = pendaftar.filter(p => p.status === 'pending').length;
-      const diterima = pendaftar.filter(p => p.status === 'diterima').length;
-      const jadwalMendatang = jadwal.filter(j => new Date(j.tanggal) >= new Date()).length;
+      const pending = pendaftar.filter((p) => p.status === 'pending').length;
+      const diterima = pendaftar.filter((p) => p.status === 'diterima').length;
+      const jadwalMendatang = jadwal.filter((j) => new Date(j.tanggal) >= new Date()).length;
 
       setStats({ totalPendaftar: total, pending, diterima, jadwalMendatang });
 
       // Aktivitas terbaru
       const activities = [];
 
+      // Pengajuan perubahan jadwal
       jadwal
-        .filter(j => j.pengajuan_perubahan)
+        .filter((j) => j.pengajuan_perubahan)
         .slice(0, 3)
-        .forEach(j => {
+        .forEach((j) => {
           activities.push({
             name: j.pendaftar_nama || 'Calon Anggota',
             action: 'Mengajukan perubahan jadwal',
@@ -66,10 +72,11 @@ export default function AdminDashboard() {
           });
         });
 
+      // Hasil tes
       hasil
         .sort((a, b) => new Date(b.waktu_mulai) - new Date(a.waktu_mulai))
         .slice(0, 3)
-        .forEach(h => {
+        .forEach((h) => {
           activities.push({
             name: `User ID ${h.user_id}`,
             action: 'Menyelesaikan soal tes',
@@ -77,10 +84,11 @@ export default function AdminDashboard() {
           });
         });
 
+      // Pendaftar baru
       pendaftar
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 3)
-        .forEach(p => {
+        .forEach((p) => {
           activities.push({
             name: p.nama_lengkap,
             action: 'Mendaftar sebagai calon anggota',
@@ -90,70 +98,70 @@ export default function AdminDashboard() {
 
       setRecentActivities(activities.slice(0, 6));
 
-      // Data grafik
+      // Data grafik pertumbuhan (kumulatif)
       const dailyData = {};
-      pendaftar.forEach(p => {
-        const day = new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long' });
-        dailyData[day] = (dailyData[day] || 0) + 1;
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+      pendaftar.forEach((p) => {
+        const day = new Date(p.created_at).getDay(); // 0 = Minggu
+        const dayName = days[day];
+        dailyData[dayName] = (dailyData[dayName] || 0) + 1;
       });
 
-      const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-      const data = days.map(day => ({
-        day,
-        total: dailyData[day] || 0,
-      }));
-
       let cumulative = 0;
-      const cumulativeData = data.map(d => ({
-        ...d,
-        total: (cumulative += d.total),
+      const data = days.map((day) => ({
+        day,
+        total: (cumulative += dailyData[day] || 0),
       }));
 
-      setRegistrationData(cumulativeData);
+      setRegistrationData(data);
     } catch (err) {
-      console.error("Gagal ambil data dashboard:", err);
-      setError(err.message || "Gagal memuat data dashboard");
+      console.error('Gagal ambil data dashboard:', err);
+      setError(err.message || 'Gagal memuat data dashboard');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    setLoading(true); // Pastikan loading dimulai
     fetchData();
 
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 30000); // Refresh tiap 30 detik
     return () => clearInterval(interval);
   }, []);
 
-  // 🔹 Tampilkan loader saat loading
+  // Tampilkan loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memuat data dashboard...</p>
-      </div>
+      <AuthWrapper requiredRole="admin">
+        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+          <p className="text-lg text-gray-600">Memuat dashboard admin...</p>
+        </div>
+      </AuthWrapper>
     );
   }
 
-  // 🔹 Tampilkan error jika gagal
+  // Tampilkan error
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-md text-center shadow-lg">
-          <h3 className="font-bold text-lg">Gagal Memuat Dashboard</h3>
-          <p className="mt-2 text-sm">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Coba Lagi
-          </button>
+      <AuthWrapper requiredRole="admin">
+        <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center p-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-md text-center shadow-lg">
+            <h3 className="font-bold text-lg">Gagal Memuat Dashboard</h3>
+            <p className="mt-2 text-sm">{error}</p>
+            <button
+              onClick={fetchData}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Coba Lagi
+            </button>
+          </div>
         </div>
-      </div>
+      </AuthWrapper>
     );
   }
 
-  // ✅ Render UI jika sukses
+  // Statistik Cards
   const statsCards = [
     {
       label: 'Total Calon Anggota',
@@ -184,12 +192,12 @@ export default function AdminDashboard() {
   return (
     <AuthWrapper requiredRole="admin">
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
-        <main className="relative overflow-hidden py-16">
+        <main className="py-16">
           <div className="container mx-auto px-6 max-w-7xl">
             <FadeIn>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
                 <div className="text-center sm:text-left">
-                  <h1 className="text-2xl pt-10 sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight">
                     Dashboard Admin
                   </h1>
                   <p className="text-gray-600 mt-2">
@@ -260,7 +268,7 @@ export default function AdminDashboard() {
                   <h2 className="text-xl font-semibold text-gray-800 mb-6">Calon Anggota Terbaru</h2>
                   <div className="space-y-4">
                     {recentActivities
-                      .filter(act => act.action.includes('Mendaftar'))
+                      .filter((act) => act.action.includes('Mendaftar'))
                       .slice(0, 4)
                       .map((act, index) => (
                         <div
@@ -270,18 +278,16 @@ export default function AdminDashboard() {
                         >
                           <div className="flex items-center space-x-3">
                             <div className="w-9 h-9 bg-gradient-to-br from-sky-200 to-sky-400 rounded-full flex items-center justify-center text-white font-bold">
-                              {act.name.charAt(0)}
+                              {act.name.charAt(0).toUpperCase()}
                             </div>
                             <span className="font-medium text-gray-800">{act.name}</span>
                           </div>
-                          <button
-                            className="text-xs bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-lg hover:scale-105 transition-transform duration-200"
-                          >
+                          <button className="text-xs bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-lg hover:scale-105 transition-transform duration-200">
                             Lihat Detail
                           </button>
                         </div>
                       ))}
-                    {recentActivities.filter(act => act.action.includes('Mendaftar')).length === 0 && (
+                    {recentActivities.filter((act) => act.action.includes('Mendaftar')).length === 0 && (
                       <p className="text-gray-500 text-center py-4">Belum ada pendaftar baru.</p>
                     )}
                   </div>
@@ -312,12 +318,6 @@ export default function AdminDashboard() {
                 </div>
               </SlideUp>
             </div>
-
-            {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center">
-                {error}
-              </div>
-            )}
           </div>
         </main>
       </div>

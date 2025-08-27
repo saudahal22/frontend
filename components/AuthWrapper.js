@@ -1,10 +1,11 @@
 // components/AuthWrapper.js
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AuthWrapper({ children, requiredRole = null }) {
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function AuthWrapper({ children, requiredRole = null }) {
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      
+
       if (requiredRole && payload.role !== requiredRole) {
         alert(`Akses ditolak: Anda bukan ${requiredRole}.`);
         router.push(payload.role === 'admin' ? '/admin-dashboard' : '/');
@@ -34,8 +35,18 @@ export default function AuthWrapper({ children, requiredRole = null }) {
       localStorage.clear();
       router.push('/login');
       return;
+    } finally {
+      setIsLoading(false);
     }
   }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Memeriksa autentikasi...</p>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }
