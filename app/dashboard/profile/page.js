@@ -140,13 +140,12 @@ export default function ProfilePage() {
                   className="relative cursor-pointer group"
                   onClick={handleProfileClick}
                 >
-                  <Image
+                  <img
                     src={profile.profilePicture}
                     alt="Profil"
                     width={120}
                     height={120}
                     className="rounded-full border-4 border-sky-200 w-32 h-32 object-cover transition-transform duration-300 group-hover:scale-105"
-                    unoptimized // Karena dari /uploads/
                   />
                   <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                     <span className="text-white text-xs font-medium">
