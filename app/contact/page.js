@@ -150,7 +150,7 @@ export default function Contact() {
           <div className="container mx-auto px-6 ">
             <FadeIn>
               <h1 className="text-5xl md:text-7xl font-bold font-playfair pt-20 py-3 bg-gradient-to-l from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent animate-gradient">
-                Contact Us
+                Hubungi Kami
               </h1>
             </FadeIn>
             <SlideUp delay={200}>

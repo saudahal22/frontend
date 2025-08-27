@@ -216,7 +216,7 @@ export default function LoginPage() {
               </form>
 
               {/* Belum punya akun? */}
-              <SlideUp delay={800}>
+              
                 <div className="text-center mt-6">
                   <Link
                     href="/registrasi"
@@ -226,7 +226,7 @@ export default function LoginPage() {
                     Belum punya akun? Daftar di sini
                   </Link>
                 </div>
-              </SlideUp>
+              
             </div>
           </div>
         </div>
