@@ -7,7 +7,6 @@ import { FadeIn, SlideUp } from '../../components/Animations';
 import Spinner from '../../components/Spinner';
 import { apiClient } from '../../lib/apiClient';
 import { useRouter } from 'next/navigation';
-import jwtDecode from 'jwt-decode'; // ✅ Sekarang dipakai sebagai fallback
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
