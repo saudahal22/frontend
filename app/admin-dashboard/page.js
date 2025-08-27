@@ -1,624 +1,311 @@
-// app/dashboard/page.js
+// app/admin-dashboard/page.js
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { FadeIn, SlideUp } from '../../components/Animations';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { Users, Clock, CheckCircle2, Calendar, MessageCircle, FileText, TrendingUp } from 'lucide-react';
+import { apiClient } from '../../lib/apiClient';
 
-export default function DashboardCalonAnggota() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  // Statistik
+export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [stats, setStats] = useState({
-    totalMembers: 0,
-    pendingRequests: 0,
-    eventsThisMonth: 3,
-    newMembers: 0,
+    totalPendaftar: 0,
+    pending: 0,
+    diterima: 0,
+    jadwalMendatang: 0,
   });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [registrationData, setRegistrationData] = useState([]);
 
-  // Data
-  const [members, setMembers] = useState([]);
-  const [pendingReschedules, setPendingReschedules] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  // Ambil data dari backend
+  const fetchData = async () => {
+    try {
+      // 1. Ambil semua pendaftar
+      const pendaftarRes = await apiClient('/pendaftar/all');
+      const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
 
-  const [testSchedules, setTestSchedules] = useState([]);
-  const [studyMaterials, setStudyMaterials] = useState([]);
+      // 2. Ambil semua jadwal
+      const jadwalRes = await apiClient('/jadwal/all');
+      const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
 
-  // Form
-  const [newNotif, setNewNotif] = useState({ title: '', content: '', scheduled: '' });
-  const [newSchedule, setNewSchedule] = useState({ title: '', date: '', time: '', location: '' });
-  const [newMaterial, setNewMaterial] = useState({ title: '', type: '', link: '' });
+      // 3. Ambil semua hasil tes
+      const hasilRes = await apiClient('/test/hasil');
+      const hasil = Array.isArray(hasilRes) ? hasilRes : [];
 
-  // Filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCampus, setFilterCampus] = useState('');
+      // Hitung statistik
+      const total = pendaftar.length;
+      const pending = pendaftar.filter(p => p.status === 'pending').length;
+      const diterima = pendaftar.filter(p => p.status === 'diterima').length;
+      const jadwalMendatang = jadwal.filter(j => new Date(j.tanggal) >= new Date()).length;
 
-  const [submitStatus, setSubmitStatus] = useState('');
+      setStats({ totalPendaftar: total, pending, diterima, jadwalMendatang });
 
-  // Cegah inisialisasi berulang
-  const initialized = useRef(false);
+      // Aktivitas terbaru (digabung dari beberapa sumber)
+      const activities = [];
+
+      // Aktivitas: Pengajuan ubah jadwal
+      jadwal
+        .filter(j => j.pengajuan_perubahan)
+        .slice(0, 3)
+        .forEach(j => {
+          activities.push({
+            name: j.pendaftar_nama || 'Calon Anggota',
+            action: 'Mengajukan perubahan jadwal',
+            time: 'Baru',
+          });
+        });
+
+      // Aktivitas: Submit tes
+      hasil
+        .sort((a, b) => new Date(b.waktu_mulai) - new Date(a.waktu_mulai))
+        .slice(0, 3)
+        .forEach(h => {
+          activities.push({
+            name: `User ID ${h.user_id}`,
+            action: 'Menyelesaikan soal tes',
+            time: new Date(h.waktu_mulai).toLocaleTimeString('id-ID'),
+          });
+        });
+
+      // Aktivitas: Pendaftaran baru
+      pendaftar
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 3)
+        .forEach(p => {
+          activities.push({
+            name: p.nama_lengkap,
+            action: 'Mendaftar sebagai calon anggota',
+            time: new Date(p.created_at).toLocaleTimeString('id-ID'),
+          });
+        });
+
+      // Urutkan terbaru dulu
+      setRecentActivities(activities.slice(0, 6));
+
+      // Data grafik: pertumbuhan pendaftar per hari
+      const dailyData = {};
+      pendaftar.forEach(p => {
+        const day = new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long' });
+        dailyData[day] = (dailyData[day] || 0) + 1;
+      });
+
+      const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+      const data = days.map(day => ({
+        day,
+        total: dailyData[day] || 0,
+      }));
+
+      // Akumulasi kumulatif
+      let cumulative = 0;
+      const cumulativeData = data.map(d => ({
+        ...d,
+        total: (cumulative += d.total),
+      }));
+
+      setRegistrationData(cumulativeData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    fetchData();
 
-    // 1. Data default
-    const defaultMembers = [
-      {
-        id: 1,
-        name: 'Saudah Al',
-        email: 'saudah@gmail.com',
-        asalKampus: 'Universitas Hasanuddin',
-        prodi: 'Teknik Informatika',
-        semester: '3',
-        noWa: '08123456789',
-        domisili: 'Makassar',
-        alamat: 'Jl. Teknologi No. 1, Tamalanrea',
-        tinggalBersama: 'Kost',
-        alasan: 'Ingin belajar teknologi dan berkolaborasi dengan profesional.',
-        tahuDari: 'Dari teman yang sudah bergabung.',
-        role: 'Calon Anggota',
-        join: '13 Agustus 2025',
-        resultStatus: 'Menunggu Hasil',
-      },
-      {
-        id: 2,
-        name: 'Arsila Puteri',
-        email: 'arsila@gmail.com',
-        asalKampus: 'Politeknik Negeri Makassar',
-        prodi: 'Sistem Informasi',
-        semester: '1',
-        noWa: '082211223344',
-        domisili: 'Gowa',
-        alamat: 'Jl. Pendidikan No. 5',
-        tinggalBersama: 'Keluarga',
-        alasan: 'Tertarik dengan kegiatan riset di Coconut.',
-        tahuDari: 'Instagram @coconut.or.id',
-        role: 'Calon Anggota',
-        join: '13 Agustus 2025',
-        resultStatus: 'Menunggu Hasil',
-      },
-    ];
-
-    const defaultRequests = [
-      { 
-        id: 1, 
-        name: 'Saudah Al', 
-        current: '15 April 2025', 
-        requested: '16 April 2025', 
-        reason: 'Acara keluarga', 
-        email: 'saudah@gmail.com',
-        status: 'Menunggu',
-      },
-    ];
-
-    const defaultNotifs = [
-      { 
-        id: 1, 
-        title: 'Test Wawancara', 
-        content: 'Dilaksanakan 12 Desember 2025', 
-        scheduled: '2025-12-12' 
-      },
-    ];
-
-    const defaultSchedules = [
-      { id: 1, title: 'Tes Tulis', date: '15 April 2025', time: '09:00 - 11:00', location: 'Algo Cofee dan Snack' },
-    ];
-
-    const defaultMaterials = [
-      { id: 1, title: 'Panduan Dasar Pemrograman', type: 'PDF', link: '#', uploaded: '10 Apr 2025' },
-    ];
-
-    // 2. Ambil dari localStorage atau gunakan default
-    const savedMembers = JSON.parse(localStorage.getItem('calonAnggota')) || defaultMembers;
-    const savedRequests = JSON.parse(localStorage.getItem('rescheduleRequests')) || defaultRequests;
-    const savedNotifs = JSON.parse(localStorage.getItem('coconut_notifications')) || defaultNotifs;
-    const savedSchedules = JSON.parse(localStorage.getItem('testSchedules')) || defaultSchedules;
-    const savedMaterials = JSON.parse(localStorage.getItem('studyMaterials')) || defaultMaterials;
-
-    // 3. Simpan default jika belum ada
-    if (!localStorage.getItem('calonAnggota')) {
-      localStorage.setItem('calonAnggota', JSON.stringify(defaultMembers));
-    }
-    if (!localStorage.getItem('rescheduleRequests')) {
-      localStorage.setItem('rescheduleRequests', JSON.stringify(defaultRequests));
-    }
-    if (!localStorage.getItem('coconut_notifications')) {
-      localStorage.setItem('coconut_notifications', JSON.stringify(defaultNotifs));
-    }
-    if (!localStorage.getItem('testSchedules')) {
-      localStorage.setItem('testSchedules', JSON.stringify(defaultSchedules));
-    }
-    if (!localStorage.getItem('studyMaterials')) {
-      localStorage.setItem('studyMaterials', JSON.stringify(defaultMaterials));
-    }
-
-    // 4. Set state
-    setMembers(savedMembers);
-    setPendingReschedules(savedRequests);
-    setNotifications(savedNotifs);
-    setTestSchedules(savedSchedules);
-    setStudyMaterials(savedMaterials);
-
-    setStats({
-      totalMembers: savedMembers.length,
-      pendingRequests: savedRequests.filter(r => r.status === 'Menunggu').length,
-      eventsThisMonth: 3,
-      newMembers: savedMembers.filter(m => m.resultStatus === 'Menunggu Hasil').length,
-    });
+    // Refresh otomatis tiap 30 detik
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Simpan ke localStorage & update state
-  const saveToStorage = (key, data, setter) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-      setter(data);
-    } catch (error) {
-      console.error('Gagal simpan ke localStorage:', error);
-    }
-  };
+  // Statistik utama
+  const statsCards = [
+    {
+      label: 'Total Calon Anggota',
+      value: stats.totalPendaftar,
+      icon: <Users size={22} />,
+      color: 'from-blue-400 to-blue-600',
+    },
+    {
+      label: 'Menunggu Verifikasi',
+      value: stats.pending,
+      icon: <Clock size={22} />,
+      color: 'from-yellow-400 to-yellow-600',
+    },
+    {
+      label: 'Lulus Seleksi',
+      value: stats.diterima,
+      icon: <CheckCircle2 size={22} />,
+      color: 'from-green-400 to-green-600',
+    },
+    {
+      label: 'Jadwal Mendatang',
+      value: stats.jadwalMendatang,
+      icon: <Calendar size={22} />,
+      color: 'from-purple-400 to-purple-600',
+    },
+  ];
 
-  // Handle Approve/Reject Reschedule
-  const handleApproveRequest = (id) => {
-    const updated = pendingReschedules.map(req =>
-      req.id === id ? { ...req, status: 'Disetujui' } : req
-    );
-    saveToStorage('rescheduleRequests', updated, setPendingReschedules);
-
-    const notif = {
-      id: Date.now(),
-      message: `Pengajuan ubah jadwal Anda telah disetujui.`,
-      time: 'Baru',
-      read: false,
-    };
-    const userNotifs = JSON.parse(localStorage.getItem(`notifs_${id}`) || '[]');
-    localStorage.setItem(`notifs_${id}`, JSON.stringify([notif, ...userNotifs]));
-
-    setSubmitStatus('Pengajuan disetujui. Notifikasi dikirim.');
-  };
-
-  const handleRejectRequest = (id) => {
-    const updated = pendingReschedules.map(req =>
-      req.id === id ? { ...req, status: 'Ditolak' } : req
-    );
-    saveToStorage('rescheduleRequests', updated, setPendingReschedules);
-
-    const notif = {
-      id: Date.now(),
-      message: `Pengajuan ubah jadwal Anda ditolak.`,
-      time: 'Baru',
-      read: false,
-    };
-    const userNotifs = JSON.parse(localStorage.getItem(`notifs_${id}`) || '[]');
-    localStorage.setItem(`notifs_${id}`, JSON.stringify([notif, ...userNotifs]));
-
-    setSubmitStatus('Pengajuan ditolak. Notifikasi dikirim.');
-  };
-
-  // Handle Lulus/Tidak Lulus
-  const handleApproveMember = (id) => {
-    const updated = members.map(m =>
-      m.id === id ? { ...m, resultStatus: 'Lulus' } : m
-    );
-    saveToStorage('calonAnggota', updated, setMembers);
-    setSubmitStatus(`${updated.find(m => m.id === id)?.name || 'Pengguna'} dinyatakan LULUS.`);
-
-    const notif = {
-      id: Date.now(),
-      message: 'Selamat! Anda diterima sebagai anggota Coconut.',
-      time: 'Baru',
-      read: false,
-    };
-    const userNotifs = JSON.parse(localStorage.getItem(`notifs_${id}`) || '[]');
-    localStorage.setItem(`notifs_${id}`, JSON.stringify([notif, ...userNotifs]));
-  };
-
-  const handleRejectMember = (id) => {
-    const updated = members.map(m =>
-      m.id === id ? { ...m, resultStatus: 'Tidak Lulus' } : m
-    );
-    saveToStorage('calonAnggota', updated, setMembers);
-    setSubmitStatus(`${updated.find(m => m.id === id)?.name || 'Pengguna'} dinyatakan TIDAK LULUS.`);
-
-    const notif = {
-      id: Date.now(),
-      message: 'Maaf, Anda belum lolos seleksi kali ini.',
-      time: 'Baru',
-      read: false,
-    };
-    const userNotifs = JSON.parse(localStorage.getItem(`notifs_${id}`) || '[]');
-    localStorage.setItem(`notifs_${id}`, JSON.stringify([notif, ...userNotifs]));
-  };
-
-  // Tambah Notifikasi
-  const handleAddNotification = (e) => {
-    e.preventDefault();
-    if (!newNotif.title || !newNotif.content || !newNotif.scheduled) {
-      setSubmitStatus('Semua kolom wajib diisi.');
-      return;
-    }
-
-    const newNotifData = { id: Date.now(), ...newNotif };
-    const updated = [newNotifData, ...notifications];
-    saveToStorage('coconut_notifications', updated, setNotifications);
-    setNewNotif({ title: '', content: '', scheduled: '' });
-    setSubmitStatus('Pemberitahuan berhasil dikirim ke semua calon anggota.');
-  };
-
-  // Tambah Jadwal
-  const handleAddSchedule = (e) => {
-    e.preventDefault();
-    if (!newSchedule.title || !newSchedule.date || !newSchedule.time || !newSchedule.location) {
-      setSubmitStatus('Isi semua kolom jadwal.');
-      return;
-    }
-
-    const newScheduleData = { id: Date.now(), ...newSchedule };
-    const updated = [newScheduleData, ...testSchedules];
-    saveToStorage('testSchedules', updated, setTestSchedules);
-    setNewSchedule({ title: '', date: '', time: '', location: '' });
-    setSubmitStatus(`Jadwal "${newSchedule.title}" berhasil dikirim.`);
-  };
-
-  // Tambah Materi
-  const handleAddMaterial = (e) => {
-    e.preventDefault();
-    if (!newMaterial.title || !newMaterial.type || !newMaterial.link) {
-      setSubmitStatus('Isi semua kolom materi.');
-      return;
-    }
-
-    const newMaterialData = {
-      id: Date.now(),
-      ...newMaterial,
-      uploaded: new Date().toLocaleDateString('id-ID'),
-    };
-    const updated = [newMaterialData, ...studyMaterials];
-    saveToStorage('studyMaterials', updated, setStudyMaterials);
-    setNewMaterial({ title: '', type: '', link: '' });
-    setSubmitStatus(`Materi "${newMaterial.title}" berhasil dikirim.`);
-  };
-
-  // Cek login
-  if (!isLoggedIn) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Akses Ditolak</h2>
-          <p className="text-sm text-gray-600">Anda tidak memiliki izin sebagai admin.</p>
-        </div>
+        <p className="text-lg text-gray-600">Memuat dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className=" bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 sm:py-20">
-      <main className="relative overflow-hidden py-8 sm:py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      <main className="relative overflow-hidden py-16">
+        <div className="container mx-auto px-6 max-w-7xl">
+          {/* Header */}
           <FadeIn>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 sm:mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight">
-              Dashboard Admin
-            </h1>
-            <p className="text-sm sm:text-lg text-gray-600 text-center max-w-3xl mx-auto mb-8 sm:mb-12">
-              Kelola calon anggota, jadwal, dan pemberitahuan dengan mudah.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
+              <div className="text-center sm:text-left">
+                <h1 className="text-2xl pt-10 sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+                  Dashboard Admin
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Pantau pendaftaran, seleksi, dan aktivitas anggota secara real-time.
+                </p>
+              </div>
+              <a
+                href="/admin-dashboard/schedule"
+                className="mt-4 sm:mt-0 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-xl shadow hover:scale-105 transition-transform duration-200 inline-block"
+              >
+                + Tambah Jadwal
+              </a>
+            </div>
           </FadeIn>
 
-          {/* Statistik */}
+          {/* Stats Cards */}
           <SlideUp delay={200}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-              {[
-                { label: 'Total Calon Anggota', value: stats.totalMembers, icon: '👥', color: 'from-sky-400 to-blue-500' },
-                { label: 'Pengajuan Jadwal', value: stats.pendingRequests, icon: '⏳', color: 'from-amber-400 to-orange-500' },
-                { label: 'Acara Bulan Ini', value: stats.eventsThisMonth, icon: '📅', color: 'from-green-400 to-emerald-500' },
-                { label: 'Anggota Baru', value: stats.newMembers, icon: '🎉', color: 'from-purple-400 to-pink-500' },
-              ].map((stat, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {statsCards.map((stat, index) => (
                 <div
                   key={index}
-                  className="group bg-gradient-to-br from-white/90 to-sky-50/90 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm text-center"
+                  className="p-6 rounded-2xl shadow-md bg-white border border-gray-100 hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="text-3xl sm:text-4xl mb-2">{stat.icon}</div>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-900">{stat.value}</p>
-                  <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
+                  <div
+                    className={`w-12 h-12 mb-4 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white`}
+                  >
+                    {stat.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
+                  <p className="text-sm text-gray-500">{stat.label}</p>
                 </div>
               ))}
             </div>
           </SlideUp>
 
-          {/* Pengajuan Ubah Jadwal & Kelola Pemberitahuan */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Grafik Pertumbuhan Pendaftar */}
+          <SlideUp delay={250}>
+            <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-12">
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">Pertumbuhan Pendaftar (1 Minggu)</h2>
+              <div className="w-full h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={registrationData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="day" stroke="#6b7280" />
+                    <YAxis stroke="#6b7280" />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorTotal)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </SlideUp>
+
+          {/* Grid: Calon Anggota Terbaru & Aktivitas Terbaru */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Calon Anggota Terbaru */}
             <SlideUp delay={300}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6 flex items-center">📅 Pengajuan Ubah Jadwal</h2>
-                {pendingReschedules.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Tidak ada pengajuan.</p>
-                ) : (
-                  <div className="space-y-3 max-h-48 sm:max-h-60 overflow-y-auto pr-2">
-                    {pendingReschedules.map((req) => (
-                      <div key={req.id} className="p-4 bg-white/70 rounded-lg border border-sky-100 hover:shadow-md transition">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{req.name}</h3>
-                          <span className="text-xs text-gray-500">{req.email}</span>
+              <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6">Calon Anggota Terbaru</h2>
+                <div className="space-y-4">
+                  {recentActivities
+                    .filter(act => act.action.includes('Mendaftar'))
+                    .slice(0, 4)
+                    .map((act, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+                        onClick={() => (window.location.href = '/admin-dashboard/status')}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-9 h-9 bg-gradient-to-br from-sky-200 to-sky-400 rounded-full flex items-center justify-center text-white font-bold">
+                            {act.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-gray-800">{act.name}</span>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1"><strong>Saat Ini:</strong> {req.current}</p>
-                        <p className="text-xs sm:text-sm text-blue-600 mb-2"><strong>Diminta:</strong> {req.requested}</p>
-                        <p className="text-xs sm:text-sm text-gray-700 mb-3 italic">{req.reason}</p>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleApproveRequest(req.id)}
-                            disabled={req.status !== 'Menunggu'}
-                            className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full transition disabled:opacity-50"
-                          >
-                            Setujui
-                          </button>
-                          <button
-                            onClick={() => handleRejectRequest(req.id)}
-                            disabled={req.status !== 'Menunggu'}
-                            className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-full transition disabled:opacity-50"
-                          >
-                            Tolak
-                          </button>
-                        </div>
-                        <p className="text-xs mt-2 text-gray-700">Status: <strong>{req.status}</strong></p>
+                        <button
+                          className="text-xs bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-lg hover:scale-105 transition-transform duration-200"
+                        >
+                          Lihat Detail
+                        </button>
                       </div>
                     ))}
-                  </div>
-                )}
+                  {recentActivities.filter(act => act.action.includes('Mendaftar')).length === 0 && (
+                    <p className="text-gray-500 text-center py-4">Belum ada pendaftar baru.</p>
+                  )}
+                </div>
               </div>
             </SlideUp>
 
+            {/* Aktivitas Terbaru */}
             <SlideUp delay={400}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">🔔 Kelola Pemberitahuan</h2>
-                <form onSubmit={handleAddNotification} className="space-y-3 mb-6">
-                  <input
-                    type="text"
-                    placeholder="Judul pemberitahuan"
-                    value={newNotif.title}
-                    onChange={(e) => setNewNotif({ ...newNotif, title: e.target.value })}
-                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                  />
-                  <textarea
-                    placeholder="Isi pemberitahuan"
-                    value={newNotif.content}
-                    onChange={(e) => setNewNotif({ ...newNotif, content: e.target.value })}
-                    rows="3"
-                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                  />
-                  <input
-                    type="date"
-                    value={newNotif.scheduled}
-                    onChange={(e) => setNewNotif({ ...newNotif, scheduled: e.target.value })}
-                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold px-4 py-2 rounded-full hover:from-sky-600 hover:to-blue-700 transition shadow text-sm"
-                  >
-                    Tambah Pemberitahuan
-                  </button>
-                </form>
-                {submitStatus && (
-                  <p className="text-green-600 text-xs sm:text-sm mb-4">{submitStatus}</p>
-                )}
-                <div className="space-y-3 max-h-48 sm:max-h-60 overflow-y-auto pr-2">
-                  {notifications.map((n) => (
-                    <div key={n.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="font-medium text-blue-800 text-sm">{n.title}</p>
-                      <p className="text-xs text-gray-700 mt-1">{n.content}</p>
-                      <p className="text-xs text-gray-500 mt-1">Tanggal: {n.scheduled}</p>
-                    </div>
-                  ))}
+              <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6">Aktivitas Terbaru</h2>
+                <div className="space-y-4">
+                  {recentActivities.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">Belum ada aktivitas.</p>
+                  ) : (
+                    recentActivities.map((act, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-sm p-3 rounded-lg hover:bg-gray-50 transition"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-800">{act.name}</p>
+                          <p className="text-gray-600">{act.action}</p>
+                        </div>
+                        <span className="text-xs text-gray-500">{act.time}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </SlideUp>
           </div>
 
-          {/* Tambah Jadwal & Materi */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <SlideUp delay={450}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">📅 Tambah Jadwal Tes</h2>
-                <form onSubmit={handleAddSchedule} className="space-y-3">
-                  {['Judul', 'Tanggal', 'Waktu', 'Lokasi'].map((label, i) => (
-                    <div key={i}>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{label}</label>
-                      <input
-                        type={i === 1 ? 'date' : 'text'}
-                        value={i === 0 ? newSchedule.title : i === 1 ? newSchedule.date : i === 2 ? newSchedule.time : newSchedule.location}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (i === 0) setNewSchedule(prev => ({ ...prev, title: val }));
-                          if (i === 1) setNewSchedule(prev => ({ ...prev, date: val }));
-                          if (i === 2) setNewSchedule(prev => ({ ...prev, time: val }));
-                          if (i === 3) setNewSchedule(prev => ({ ...prev, location: val }));
-                        }}
-                        placeholder={i === 0 ? 'Contoh: Tes Wawancara' : ''}
-                        className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold px-4 py-2 rounded-full hover:from-green-600 hover:to-emerald-700 transition shadow text-sm"
-                  >
-                    Tambah Jadwal
-                  </button>
-                </form>
-              </div>
-            </SlideUp>
-
-            <SlideUp delay={500}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">📚 Tambah Soal</h2>
-                <form onSubmit={handleAddMaterial} className="space-y-3">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Judul</label>
-                    <input
-                      type="text"
-                      value={newMaterial.title}
-                      onChange={(e) => setNewMaterial({ ...newMaterial, title: e.target.value })}
-                      placeholder="Contoh: Panduan Git"
-                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Jenis</label>
-                    <select
-                      value={newMaterial.type}
-                      onChange={(e) => setNewMaterial({ ...newMaterial, type: e.target.value })}
-                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    >
-                      <option value="">Pilih jenis</option>
-                      <option value="PDF">PDF</option>
-                      <option value="Link">Link</option>
-                      <option value="Video">Video</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Link / File</label>
-                    <input
-                      type="text"
-                      value={newMaterial.link}
-                      onChange={(e) => setNewMaterial({ ...newMaterial, link: e.target.value })}
-                      placeholder="https://drive.google.com/..."
-                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold px-4 py-2 rounded-full hover:from-purple-600 hover:to-pink-700 transition shadow text-sm"
-                  >
-                    Tambah Soal
-                  </button>
-                </form>
-              </div>
-            </SlideUp>
-          </div>
-
-          {/* Jadwal Tes yang Dikirim */}
-          <SlideUp delay={550}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">📅 Jadwal Tes yang Dikirim</h2>
-              <div className="space-y-3 max-h-48 sm:max-h-60 overflow-y-auto pr-2">
-                {testSchedules.map((sched) => (
-                  <div key={sched.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="font-medium text-blue-800 text-sm">{sched.title}</p>
-                    <p className="text-xs text-gray-700 mt-1">{sched.date} | {sched.time}</p>
-                    <p className="text-xs text-gray-600">{sched.location}</p>
-                  </div>
-                ))}
-              </div>
+          {error && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center">
+              {error}
             </div>
-          </SlideUp>
-
-          {/* Pencarian & Filter */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <input
-              type="text"
-              placeholder="Cari berdasarkan nama..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="p-2 sm:p-3 border border-gray-300 rounded-lg flex-1 text-sm"
-            />
-            <select
-              value={filterCampus}
-              onChange={(e) => setFilterCampus(e.target.value)}
-              className="p-2 sm:p-3 border border-gray-300 rounded-lg text-sm"
-            >
-              <option value="">Semua Kampus</option>
-              <option value="Universitas Hasanuddin">Unhas</option>
-              <option value="Politeknik Negeri Makassar">PNM</option>
-            </select>
-          </div>
-
-          {/* Daftar Calon Anggota */}
-          <SlideUp delay={650}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">👥 Daftar Calon Anggota</h2>
-              <div className="overflow-x-auto rounded-lg border border-sky-100 shadow-sm">
-                <table className="w-full text-xs sm:text-sm text-left">
-                  <thead className="text-gray-700 uppercase bg-sky-50/50">
-                    <tr>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4 rounded-l-lg">No</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">Nama</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">Kampus</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">Prodi</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">Semester</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">No. WA</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4">Status</th>
-                      <th className="px-3 py-3 sm:px-4 sm:py-4 rounded-r-lg">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-sky-100">
-                    {members
-                      .filter(m =>
-                        m.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                        (filterCampus ? m.asalKampus === filterCampus : true)
-                      )
-                      .map((m, index) => (
-                        <tr key={m.id} className="hover:bg-sky-50/40 transition text-xs sm:text-sm">
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 font-medium">{index + 1}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 font-medium">{m.name}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 text-gray-600">{m.asalKampus}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 text-gray-600">{m.prodi}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 text-gray-600">{m.semester}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 text-gray-600">{m.noWa}</td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              m.resultStatus === 'Lulus'
-                                ? 'bg-green-100 text-green-800'
-                                : m.resultStatus === 'Tidak Lulus'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {m.resultStatus}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 sm:px-4 sm:py-4 space-x-1">
-                            <button
-                              onClick={() => handleApproveMember(m.id)}
-                              className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded transition"
-                            >
-                              Lulus
-                            </button>
-                            <button
-                              onClick={() => handleRejectMember(m.id)}
-                              className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition"
-                            >
-                              Tolak
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </SlideUp>
-
-          {/* Aktivitas Terbaru */}
-          <SlideUp delay={700}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-2xl sm:rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-4 sm:mb-6">🔄 Aktivitas Terbaru</h2>
-              <div className="space-y-3 max-h-48 sm:max-h-60 overflow-y-auto pr-2">
-                <div className="flex items-center p-3 bg-white/60 rounded-lg border border-gray-100">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-yellow-500"></div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-800">Pengajuan ubah jadwal</p>
-                    <p className="text-xs text-gray-500">oleh Saudah Al • 2 jam lalu</p>
-                  </div>
-                </div>
-                <div className="flex items-center p-3 bg-white/60 rounded-lg border border-gray-100">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-blue-500"></div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-800">Pemberitahuan dikirim</p>
-                    <p className="text-xs text-gray-500">oleh System • 1 hari lalu</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SlideUp>
+          )}
         </div>
       </main>
     </div>

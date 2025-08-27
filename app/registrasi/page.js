@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { apiClient } from '../../lib/apiClient';
-import { useRouter } from 'next/navigation';
+import { useState, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { apiClient } from "../../lib/apiClient";
+import { useRouter } from "next/navigation";
 
 // Komponen Spinner
 function Spinner() {
@@ -65,9 +65,7 @@ function SuccessModal({ isOpen, onClose, onConfirm, message }) {
 
         {/* Pesan */}
         <h3 className="text-xl font-bold text-gray-800 mb-3">Berhasil!</h3>
-        <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-          {message}
-        </p>
+        <p className="text-gray-600 mb-6 text-sm leading-relaxed">{message}</p>
 
         {/* Tombol Aksi */}
         <div className="flex gap-3">
@@ -90,11 +88,11 @@ function SuccessModal({ isOpen, onClose, onConfirm, message }) {
 }
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const router = useRouter();
@@ -104,34 +102,34 @@ export default function RegisterPage() {
     e.preventDefault();
 
     // Reset error
-    setError('');
+    setError("");
     setLoading(true);
 
     // Validasi frontend
     if (!username || !email || !password || !confirmPassword) {
-      setError('Semua field wajib diisi');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Semua field wajib diisi");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       setLoading(false);
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Format email tidak valid');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Format email tidak valid");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Password dan konfirmasi tidak cocok');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError("Password dan konfirmasi tidak cocok");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
       setLoading(false);
       return;
     }
 
     try {
-      const data = await apiClient('/register', {
-        method: 'POST',
+      const data = await apiClient("/register", {
+        method: "POST",
         body: JSON.stringify({
           username,
           email,
@@ -143,8 +141,8 @@ export default function RegisterPage() {
       // Tampilkan modal sukses
       setShowSuccessModal(true);
     } catch (err) {
-      setError(err.message || 'Gagal mendaftar. Coba lagi.');
-      errorRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setError(err.message || "Gagal mendaftar. Coba lagi.");
+      errorRef.current?.scrollIntoView({ behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -155,7 +153,6 @@ export default function RegisterPage() {
       {/* Halaman Utama */}
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
-          
           {/* Left Section - Illustration */}
           <div className="w-full md:w-1/2 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-8 md:p-10 flex flex-col justify-center items-center">
             <div className="mt-10 w-full flex justify-center">
@@ -201,7 +198,10 @@ export default function RegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Username */}
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Username
                   </label>
                   <input
@@ -220,7 +220,10 @@ export default function RegisterPage() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Email
                   </label>
                   <input
@@ -239,7 +242,10 @@ export default function RegisterPage() {
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Password
                   </label>
                   <input
@@ -258,7 +264,10 @@ export default function RegisterPage() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Konfirmasi Password
                   </label>
                   <input
@@ -277,7 +286,10 @@ export default function RegisterPage() {
 
                 {/* Lupa Password */}
                 <div className="text-right">
-                  <Link href="/forgot-password" className="text-sm text-sky-600 hover:underline hover:text-sky-800 transition">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-sky-600 hover:underline hover:text-sky-800 transition"
+                  >
                     Lupa Password?
                   </Link>
                 </div>
@@ -297,15 +309,18 @@ export default function RegisterPage() {
                       Memproses...
                     </>
                   ) : (
-                    'Register'
+                    "Register"
                   )}
                 </button>
                 <div className="mt-4 text-center text-sm">
-  <span className="text-gray-600">Sudah punya akun?</span>{' '}
-  <Link href="/login" className="text-sky-600 font-medium hover:underline">
-    Masuk
-  </Link>
-</div>
+                  <span className="text-gray-600">Sudah punya akun?</span>{" "}
+                  <Link
+                    href="/login"
+                    className="text-sky-600 font-medium hover:underline"
+                  >
+                    Masuk
+                  </Link>
+                </div>
               </form>
             </div>
           </div>
@@ -318,7 +333,7 @@ export default function RegisterPage() {
         onClose={() => setShowSuccessModal(false)}
         onConfirm={() => {
           setShowSuccessModal(false);
-          router.push('/login');
+          router.push("/login");
         }}
         message="Akun berhasil dibuat! Silakan cek email Anda untuk verifikasi."
       />

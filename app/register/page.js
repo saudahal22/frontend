@@ -3,149 +3,100 @@
 
 import { useState } from 'react';
 import { FadeIn, SlideUp } from '../../components/Animations';
+import { apiClient } from '../../lib/apiClient';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    fullName: '',
-    campus: '',
-    major: '',
+    nama_lengkap: '',
+    asal_kampus: '',
+    prodi: '',
     semester: '',
-    phone: '',
-    city: '',
-    address: '',
-    livingWith: '',
-    photo: null,
-    reason: '',
-    knowAbout: '',
+    no_wa: '',
+    domisili: '',
+    alamat_sekarang: '',
+    tinggal_dengan: '',
+    alasan_masuk: '',
+    pengetahuan_coconut: '',
+    foto: null,
   });
-
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const router = useRouter();
 
-  // Validasi karakter yang diizinkan
-  const isValidInput = (value) => {
-    const regex = /^[a-zA-Z0-9\s.,!?;:'"()\-+*/]+$/;
-    return regex.test(value);
-  };
-
-  // Handle perubahan input
   const handleChange = (e) => {
     const { name, value, type } = e.target;
 
-    if (name === 'photo') {
-      setFormData((prev) => ({ ...prev, photo: e.target.files[0] }));
-      return;
-    }
-
-    if (type === 'radio') {
-      setFormData((prev) => ({ ...prev, livingWith: value }));
-      return;
-    }
-
-    if (value && !isValidInput(value)) {
-      setError('Input mengandung karakter yang tidak diizinkan.');
+    if (name === 'foto') {
+      setFormData((prev) => ({ ...prev, foto: e.target.files[0] }));
       return;
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(''); // Clear error jika valid
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  const requiredFields = [
-    'fullName',
-    'campus',
-    'major',
-    'semester',
-    'phone',
-    'city',
-    'address',
-    'livingWith',
-    'reason',
-    'knowAbout',
-    'photo',
-  ];
-
-  for (let field of requiredFields) {
-    if (!formData[field]) {
-      setError('Semua field wajib diisi.');
+    // Validasi frontend
+    if (!formData.nama_lengkap || !formData.asal_kampus || !formData.prodi || !formData.no_wa) {
+      setError('Nama, asal kampus, program studi, dan nomor WA wajib diisi.');
+      setLoading(false);
       return;
     }
-  }
 
-  if (!/^[0-9]{9,13}$|^\+?62[0-9]{9,12}$/.test(formData.phone)) {
-    setError('Nomor WA tidak valid.');
-    return;
-  }
-
-  const file = formData.photo;
-  if (file && !['image/jpeg', 'image/jpg'].includes(file.type)) {
-    setError('Foto harus dalam format JPG/JPEG.');
-    return;
-  }
-
-  setLoading(true);
-  setError('');
-
-  try {
-    // ✅ Hanya simpan metadata, TANPA base64
-    const newMember = {
-      id: Date.now(),
-      name: formData.fullName.trim(),
-      email: `calon${Date.now()}@coconut.or.id`,
-      asalKampus: formData.campus.trim(),
-      prodi: formData.major.trim(),
-      semester: formData.semester,
-      noWa: formData.phone,
-      domisili: formData.city.trim(),
-      alamat: formData.address.trim(),
-      tinggalBersama: formData.livingWith,
-      alasan: formData.reason.trim(),
-      tahuDari: formData.knowAbout.trim(),
-      role: 'Calon Anggota',
-      join: new Date().toLocaleDateString('id-ID'),
-      resultStatus: 'Menunggu Hasil',
-      // 💡 Tambahkan flag jika ingin tahu foto diupload
-      hasPhoto: true, // atau simpan nama file
-    };
-
-    const saved = JSON.parse(localStorage.getItem('calonAnggota')) || [];
-    const updated = [newMember, ...saved];
-
-    // ✅ Ini yang menyebabkan error jika ada base64
-    localStorage.setItem('calonAnggota', JSON.stringify(updated));
-
-    // Reset form
-    setFormData({
-      fullName: '',
-      campus: '',
-      major: '',
-      semester: '',
-      phone: '',
-      city: '',
-      address: '',
-      livingWith: '',
-      photo: null,
-      reason: '',
-      knowAbout: '',
-    });
-
-    alert('Pendaftaran berhasil! Data telah dikirim ke admin.');
-    window.location.href = '/login';
-
-  } catch (err) {
-    console.error('Error saat simpan:', err);
-    if (err.name === 'QuotaExceededError' || err.code === 22) {
-      setError('Penyimpanan penuh. Coba bersihkan cache atau gunakan browser lain.');
-    } else {
-      setError('Gagal menyimpan data. Coba lagi.');
+    if (!/^[0-9]{9,13}$|^\+?62[0-9]{9,12}$/.test(formData.no_wa)) {
+      setError('Nomor WA tidak valid (contoh: 08123456789)');
+      setLoading(false);
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+
+    if (!formData.foto) {
+      setError('Foto wajib diunggah dalam format JPG/JPEG.');
+      setLoading(false);
+      return;
+    }
+
+    const file = formData.foto;
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      setError('Hanya file JPG, JPEG, dan PNG yang diperbolehkan.');
+      setLoading(false);
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Ukuran foto maksimal 2 MB.');
+      setLoading(false);
+      return;
+    }
+
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach(key => {
+      if (key !== 'foto') {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
+    formDataToSend.append('foto', formData.foto);
+
+    try {
+      await apiClient('/pendaftar/create', {
+        method: 'POST',
+        body: formDataToSend,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setShowSuccessModal(true);
+    } catch (err) {
+      setError(err.message || 'Gagal mendaftar. Coba lagi.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
@@ -153,74 +104,70 @@ export default function RegisterPage() {
         <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden border border-white/60">
           {/* Header */}
           <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-8 text-center">
-            <h1 className="text-3xl font-bold">Formulir Calon Anggota</h1>
-            <p className="text-sky-100 mt-2">Isi data dengan jujur dan lengkap</p>
+            <h1 className="text-3xl font-bold">Gabung Bersama Coconut</h1>
+            <p className="text-sky-100 mt-2">Isi data di bawah untuk mendaftar sebagai calon anggota</p>
           </div>
 
           {/* Form */}
           <div className="p-8 md:p-10">
-            {/* Error Message */}
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm text-center animate-pulse">
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm text-center">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Nama Lengkap */}
+              {/* Input seperti sebelumnya */}
               <SlideUp delay={200}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
+                    name="nama_lengkap"
+                    value={formData.nama_lengkap}
                     onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                     placeholder="Contoh: Saudah Al"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
                   />
                 </div>
               </SlideUp>
 
-              {/* Asal Kampus */}
               <SlideUp delay={300}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Asal Kampus *</label>
                   <input
                     type="text"
-                    name="campus"
-                    value={formData.campus}
+                    name="asal_kampus"
+                    value={formData.asal_kampus}
                     onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                     placeholder="Contoh: Universitas Hasanuddin"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
                   />
                 </div>
               </SlideUp>
 
-              {/* Program Studi */}
               <SlideUp delay={400}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Program Studi *</label>
                   <input
                     type="text"
-                    name="major"
-                    value={formData.major}
+                    name="prodi"
+                    value={formData.prodi}
                     onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                     placeholder="Contoh: Teknik Informatika"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
                   />
                 </div>
               </SlideUp>
 
-              {/* Semester */}
               <SlideUp delay={500}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Semester *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
                   <select
                     name="semester"
                     value={formData.semester}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                   >
                     <option value="">Pilih semester</option>
                     <option value="1">Semester 1</option>
@@ -229,60 +176,56 @@ export default function RegisterPage() {
                 </div>
               </SlideUp>
 
-              {/* No. WA */}
               <SlideUp delay={600}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">No. WA (Aktif) *</label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    name="no_wa"
+                    value={formData.no_wa}
                     onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                     placeholder="Contoh: 08123456789"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
                   />
                 </div>
               </SlideUp>
 
-              {/* Domisili (Kota) */}
               <SlideUp delay={700}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Domisili (Kota) *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Domisili (Kota)</label>
                   <input
                     type="text"
-                    name="city"
-                    value={formData.city}
+                    name="domisili"
+                    value={formData.domisili}
                     onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                     placeholder="Contoh: Makassar"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
                   />
                 </div>
               </SlideUp>
 
-              {/* Alamat Sekarang */}
               <SlideUp delay={800}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Sekarang *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Sekarang</label>
                   <textarea
-                    name="address"
-                    value={formData.address}
+                    name="alamat_sekarang"
+                    value={formData.alamat_sekarang}
                     onChange={handleChange}
-                    rows="3"
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 resize-none transition"
                     placeholder="Contoh: Jl. Teknologi No. 1, Tamalanrea"
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 resize-none transition"
                   ></textarea>
                 </div>
               </SlideUp>
 
-              {/* Tinggal Bersama */}
               <SlideUp delay={850}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tinggal Bersama *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tinggal Bersama</label>
                   <select
-                    name="livingWith"
-                    value={formData.livingWith}
+                    name="tinggal_dengan"
+                    value={formData.tinggal_dengan}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 transition"
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 transition"
                   >
                     <option value="">Pilih tempat tinggal</option>
                     <option value="Keluarga">Keluarga</option>
@@ -292,15 +235,14 @@ export default function RegisterPage() {
                 </div>
               </SlideUp>
 
-              {/* Upload Foto */}
               <SlideUp delay={900}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Foto (JPG/JPEG) *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Foto *</label>
                   <input
                     type="file"
                     id="photo-upload"
-                    name="photo"
-                    accept=".jpg, .jpeg"
+                    name="foto"
+                    accept=".jpg,.jpeg,.png"
                     onChange={handleChange}
                     className="hidden"
                   />
@@ -313,49 +255,46 @@ export default function RegisterPage() {
                     </svg>
                     <span className="font-medium">Upload Foto</span>
                   </label>
-                  {formData.photo && (
+                  {formData.foto && (
                     <p className="text-sm text-green-600 mt-2">
-                      ✅ Terpilih: <span className="font-medium">{formData.photo.name}</span>
+                      ✅ Terpilih: <span className="font-medium">{formData.foto.name}</span>
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Format: JPG/JPEG | Latar: Biru
+                    Format: JPG/JPEG/PNG | Maks 2 MB | Latar: Biru
                   </p>
                 </div>
               </SlideUp>
 
-              {/* Alasan Masuk Coconut */}
               <SlideUp delay={950}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alasan Masuk Coconut *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Alasan Masuk Coconut</label>
                   <textarea
-                    name="reason"
-                    value={formData.reason}
+                    name="alasan_masuk"
+                    value={formData.alasan_masuk}
                     onChange={handleChange}
-                    rows="3"
-                    placeholder="Contoh: Saya ingin belajar teknologi dan berkolaborasi dengan profesional..."
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 resize-none transition"
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 resize-none transition"
+                    placeholder="Contoh: Saya ingin belajar teknologi dan berkolaborasi dengan profesional"
                   ></textarea>
                 </div>
               </SlideUp>
 
-              {/* Apa yang kamu ketahui tentang Coconut */}
               <SlideUp delay={1000}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apa yang Anda Ketahui Tentang Coconut? *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Apa yang Anda Ketahui Tentang Coconut?</label>
                   <textarea
-                    name="knowAbout"
-                    value={formData.knowAbout}
+                    name="pengetahuan_coconut"
+                    value={formData.pengetahuan_coconut}
                     onChange={handleChange}
-                    rows="3"
-                    placeholder="Contoh: Coconut adalah komunitas teknologi yang fokus pada riset dan pengembangan..."
-                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-500 bg-gray-50 resize-none transition"
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-sky-400 bg-gray-50 resize-none transition"
+                    placeholder="Contoh: Coconut adalah komunitas teknologi yang fokus pada riset dan pengembangan"
                   ></textarea>
                 </div>
               </SlideUp>
 
-              {/* Submit Button */}
-              <SlideUp delay={1050}>
+              <SlideUp delay={1050} className="mt-8">
                 <button
                   type="submit"
                   disabled={loading}
@@ -371,7 +310,7 @@ export default function RegisterPage() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                         ></path>
                       </svg>
-                      Mengirim Data...
+                      Memproses...
                     </>
                   ) : (
                     'Daftar Sekarang'
@@ -380,13 +319,36 @@ export default function RegisterPage() {
               </SlideUp>
             </form>
 
-            {/* Info Tambahan */}
-            <SlideUp delay={1100} className="mt-8 text-center text-sm text-gray-600">
-              <p className="text-green-600 font-medium">✅ Formulir ini memberi poin tambahan dalam seleksi!</p>
+            <SlideUp delay={1100} className="mt-6 text-sm text-gray-600">
+              <p className="text-green-600 text-right text-sm pt-2">✅ Mengisi formulir ini mendapat penambahan poin seleksi.</p>
             </SlideUp>
           </div>
         </div>
       </FadeIn>
+
+      {/* Modal Sukses */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Berhasil!</h3>
+            <p className="text-gray-600 mb-6">Pendaftaran berhasil dikirim. Hasil akan diumumkan melalui status keaanggotaan dan email resmi</p>
+            <button
+              onClick={() => {
+                setShowSuccessModal(false);
+                router.push('/dashboard');
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition"
+            >
+              Ke Dashboard
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

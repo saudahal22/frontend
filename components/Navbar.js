@@ -153,7 +153,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Header: Hamburger di kanan, Logo di kiri */}
-      <div className="sm:hidden flex items-center justify-between px-4 py-3">
+      <div className="sm:hidden flex items-center justify-between px-4 ">
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/logococonut1.png"

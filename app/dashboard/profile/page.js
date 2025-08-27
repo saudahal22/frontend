@@ -4,20 +4,102 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FadeIn, SlideUp } from '../../../components/Animations';
+import { apiClient } from '../../../lib/apiClient'; // ✅ Gunakan apiClient
 
 export default function ProfilePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [profile, setProfile] = useState({
-    name: 'Saudah Al',
-    email: 'saudah@gmail.com',
-    role: 'Calon Anggota',
-    joinDate: '13 Agustus 2025',
-    asalKampus: 'Universitas Hasanuddin',
-    prodi: 'Teknik Informatika',
-    semester: '3',
-    noWa: '08123456789',
-    avatar: '/slider/saudahlatarbiru.png',
-  });
+  const [isLoggedIn] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchProfile = async () => {
+    try {
+      const data = await apiClient('/profile'); // 🔥 Langsung ke backend
+
+      setProfile({
+        fullName: data.full_name || data.FullName,
+        email: data.email || data.Email,
+        statusKeanggotaan: data.status_keanggotaan || data.StatusKeanggotaan,
+        profilePicture: data.profile_picture
+          ? `/uploads/${data.profile_picture}`
+          : '/default-avatar.png',
+        tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung,
+      });
+    } catch (err) {
+      console.error('Gagal muat profil:', err);
+      setError(err.message);
+      setProfile({
+        fullName: 'Pengguna',
+        email: 'error@coconut.or.id',
+        statusKeanggotaan: 'Tidak Dikenal',
+        profilePicture: '/default-avatar.png',
+        tanggalBergabung: '-',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+
+    const handleStorageChange = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handleProfileClick = () => {
+    setIsEditing(true);
+  };
+
+  const closeModal = () => {
+    setIsEditing(false);
+    setError('');
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('full_name', profile.fullName);
+    formData.append('profile_picture', file);
+
+    try {
+      // ✅ Gunakan apiClient dengan headers multipart
+      await apiClient('/profile/update', {
+        method: 'PUT',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data', // ⚠️ apiClient akan handle otomatis
+        },
+      });
+
+      // Update foto lokal (dengan timestamp agar tidak cache)
+      const timestamp = new Date().getTime();
+      setProfile((prev) => ({
+        ...prev,
+        profilePicture: `/uploads/${file.name}?t=${timestamp}`,
+      }));
+
+      alert('Profil berhasil diperbarui!');
+    } catch (err) {
+      console.error('Gagal update profil:', err);
+      setError(err.message);
+      alert('Gagal mengunggah foto. Cek format (JPG/PNG) dan ukuran file.');
+    } finally {
+      setUploading(false);
+      closeModal();
+    }
+  };
 
   if (!isLoggedIn) {
     return (
@@ -30,59 +112,105 @@ export default function ProfilePage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <p className="text-lg text-gray-600">Memuat profil...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <main className="relative overflow-hidden py-24">
-        <div className="container mx-auto px-6 max-w-6xl">
+        <div className="container mx-auto px-6 max-w-4xl">
           <FadeIn>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
               Profil Saya
             </h1>
-            <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
-              Informasi pribadi Anda yang telah diisi saat mendaftar.
+            <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-16">
+              Kelola informasi pribadi Anda di sini.
             </p>
           </FadeIn>
 
           <SlideUp delay={200}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
-                <Image
-                  src={profile.avatar}
-                  alt="Profil"
-                  width={120}
-                  height={120}
-                  className="rounded-full border-4 border-sky-200 w-32 h-32 object-cover"
-                />
-                <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-                  <p className="text-gray-600">{profile.email}</p>
-                  <p className="text-sm text-blue-600 font-medium">{profile.role}</p>
-                  <p className="text-sm text-gray-500 mt-1">Tanggal Bergabung: {profile.joinDate}</p>
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={handleProfileClick}
+                >
+                  <Image
+                    src={profile.profilePicture}
+                    alt="Profil"
+                    width={120}
+                    height={120}
+                    className="rounded-full border-4 border-sky-200 w-32 h-32 object-cover transition-transform duration-300 group-hover:scale-105"
+                    unoptimized // Karena dari /uploads/
+                  />
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                    <span className="text-white text-xs font-medium">Ganti Foto</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Asal Kampus</h3>
-                  <p className="text-gray-700">{profile.asalKampus}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Program Studi</h3>
-                  <p className="text-gray-700">{profile.prodi}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Semester</h3>
-                  <p className="text-gray-700">{profile.semester}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-2">Nomor WhatsApp</h3>
-                  <p className="text-gray-700">{profile.noWa}</p>
+                <div className="text-center md:text-left flex-1">
+                  <h2 className="text-2xl font-bold text-gray-800">{profile.fullName}</h2>
+                  <p className="text-gray-600">{profile.email}</p>
+                  <p className="text-sm text-blue-600 font-medium">{profile.statusKeanggotaan}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Bergabung: {profile.tanggalBergabung}
+                  </p>
                 </div>
               </div>
             </div>
           </SlideUp>
         </div>
       </main>
+
+      {/* Modal Ganti Foto */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Ganti Foto Profil</h3>
+            <p className="text-sm text-gray-600 mb-5">Format: JPG, JPEG, PNG (maks 5MB)</p>
+
+            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="hidden"
+              id="photo-upload"
+            />
+            <label
+              htmlFor="photo-upload"
+              className="block w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg font-medium cursor-pointer transition mb-3"
+            >
+              {uploading ? 'Mengunggah...' : 'Pilih Foto'}
+            </label>
+
+            <button
+              onClick={closeModal}
+              disabled={uploading}
+              className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

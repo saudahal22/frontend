@@ -3,179 +3,170 @@
 
 import { useState, useEffect } from 'react';
 import { FadeIn, SlideUp } from '../../../components/Animations';
+import { apiClient } from '../../../lib/apiClient';
 
 export default function AdminSchedulePage() {
   const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [newSchedule, setNewSchedule] = useState({
-    date: '',
-    time: '',
-    location: '',
-    keterangan: '',
+    pendaftar_id: '',
+    tanggal: '',
+    jam_mulai: '',
+    jam_selesai: '',
+    tempat: '',
+    catatan: '',
+    jenis_jadwal: 'pribadi',
   });
-  const [editId, setEditId] = useState(null);
-  const [submitStatus, setSubmitStatus] = useState('');
 
-  // Load dari localStorage
+  const fetchSchedules = async () => {
+    try {
+      const data = await apiClient('/jadwal/all');
+      setSchedules(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('coconut_test_schedules')) || [];
-    setSchedules(saved);
+    fetchSchedules();
   }, []);
 
-  // Simpan ke localStorage
-  const saveToStorage = (data) => {
-    try {
-      localStorage.setItem('coconut_test_schedules', JSON.stringify(data));
-      setSchedules(data);
-      setSubmitStatus('Jadwal berhasil disimpan!');
-      setTimeout(() => setSubmitStatus(''), 5000);
-    } catch (error) {
-      console.error('Gagal simpan ke localStorage:', error);
-      setSubmitStatus('Gagal menyimpan jadwal.');
-    }
-  };
-
-  // Handle submit (tambah/edit)
-  const handleSubmit = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    const { date, time, location, keterangan } = newSchedule;
-
-    if (!date || !time || !location || !keterangan) {
-      setSubmitStatus('Semua kolom wajib diisi.');
-      return;
+    try {
+      await apiClient('/jadwal/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...newSchedule,
+          pendaftar_id: newSchedule.pendaftar_id ? parseInt(newSchedule.pendaftar_id) : null,
+        }),
+      });
+      alert('Jadwal berhasil dibuat!');
+      setNewSchedule({
+        pendaftar_id: '',
+        tanggal: '',
+        jam_mulai: '',
+        jam_selesai: '',
+        tempat: '',
+        catatan: '',
+        jenis_jadwal: 'pribadi',
+      });
+      fetchSchedules();
+    } catch (err) {
+      setError(err.message);
     }
-
-    const schedule = {
-      id: editId || Date.now(),
-      date,
-      time,
-      location,
-      keterangan,
-    };
-
-    const updated = editId
-      ? schedules.map(s => (s.id === editId ? schedule : s))
-      : [schedule, ...schedules];
-
-    saveToStorage(updated);
-
-    // Reset form
-    setNewSchedule({ date: '', time: '', location: '', keterangan: '' });
-    setEditId(null);
-    setSubmitStatus(editId ? 'Jadwal diperbarui.' : 'Jadwal baru ditambahkan.');
   };
 
-  // Edit jadwal
-  const handleEdit = (schedule) => {
-    setEditId(schedule.id);
-    setNewSchedule({
-      date: schedule.date,
-      time: schedule.time,
-      location: schedule.location,
-      keterangan: schedule.keterangan,
-    });
+  const handleUpdate = async (id, updates) => {
+    try {
+      await apiClient(`/jadwal/update?id=${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+      alert('Jadwal diperbarui!');
+      fetchSchedules();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  // Hapus jadwal
-  const handleDelete = (id) => {
-    const filtered = schedules.filter(s => s.id !== id);
-    saveToStorage(filtered);
-    setSubmitStatus('Jadwal dihapus.');
+  const handleDelete = async (id) => {
+    if (!window.confirm('Hapus jadwal ini?')) return;
+    try {
+      await apiClient(`/jadwal/delete?id=${id}`, { method: 'DELETE' });
+      alert('Jadwal dihapus');
+      fetchSchedules();
+    } catch (err) {
+      setError(err.message);
+    }
   };
+
+  const pendingRequests = schedules.filter(s => s.pengajuan_perubahan);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <FadeIn>
           <h1 className="text-3xl sm:text-4xl font-bold text-center text-blue-900 mb-4">
-            📅 Kelola Jadwal Tes
+            📅 Kelola Jadwal & Pengajuan
           </h1>
-          <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-            Tambah, edit, atau hapus jadwal tes yang akan muncul di halaman calon anggota.
+          <p className="text-center text-gray-600 mb-12">
+            Tambah, edit, atau kelola pengajuan perubahan jadwal dari calon anggota.
           </p>
         </FadeIn>
 
-        {submitStatus && (
-          <div className="mb-8 p-4 text-sm rounded-lg bg-blue-100 text-blue-800 border border-blue-200 text-center">
-            {submitStatus}
+        {error && (
+          <div className="mb-8 p-4 text-sm rounded-lg bg-red-100 text-red-800 border border-red-200 text-center">
+            {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Form Tambah/Edit Jadwal */}
+          {/* Tambah Jadwal */}
           <SlideUp delay={200}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-              <h2 className="text-xl font-bold text-blue-900 mb-6">
-                {editId ? '✏️ Edit Jadwal' : '➕ Tambah Jadwal Baru'}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
-                  <input
-                    type="text"
-                    value={newSchedule.date}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, date: e.target.value })}
-                    placeholder="Contoh: 20 Agustus 2025"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Waktu</label>
-                  <input
-                    type="text"
-                    value={newSchedule.time}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, time: e.target.value })}
-                    placeholder="Contoh: 09:00 - 11:00"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
-                  <input
-                    type="text"
-                    value={newSchedule.location}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, location: e.target.value })}
-                    placeholder="Contoh: Algo Cofee dan Snack"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
-                  <input
-                    type="text"
-                    value={newSchedule.keterangan}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, keterangan: e.target.value })}
-                    placeholder="Contoh: Tes Soal / Tes Wawancara"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-sky-600 text-white font-semibold py-3 rounded-full hover:from-blue-600 hover:to-sky-700 transition"
-                  >
-                    {editId ? 'Perbarui Jadwal' : 'Tambah Jadwal'}
-                  </button>
-                  {editId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditId(null);
-                        setNewSchedule({ date: '', time: '', location: '', keterangan: '' });
-                      }}
-                      className="px-4 py-3 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition"
-                    >
-                      Batal
-                    </button>
-                  )}
-                </div>
+              <h2 className="text-xl font-bold text-blue-900 mb-6">➕ Tambah Jadwal Baru</h2>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="ID Pendaftar (opsional)"
+                  value={newSchedule.pendaftar_id}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, pendaftar_id: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <input
+                  type="date"
+                  required
+                  value={newSchedule.tanggal}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, tanggal: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <input
+                  type="time"
+                  required
+                  value={newSchedule.jam_mulai}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, jam_mulai: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <input
+                  type="time"
+                  required
+                  value={newSchedule.jam_selesai}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, jam_selesai: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Tempat"
+                  required
+                  value={newSchedule.tempat}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, tempat: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Catatan (opsional)"
+                  value={newSchedule.catatan}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, catatan: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                />
+                <select
+                  value={newSchedule.jenis_jadwal}
+                  onChange={(e) => setNewSchedule({ ...newSchedule, jenis_jadwal: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="pribadi">Pribadi</option>
+                  <option value="umum">Umum</option>
+                </select>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-semibold transition"
+                >
+                  Tambah Jadwal
+                </button>
               </form>
             </div>
           </SlideUp>
@@ -183,45 +174,84 @@ export default function AdminSchedulePage() {
           {/* Daftar Jadwal */}
           <SlideUp delay={300}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-              <h2 className="text-xl font-bold text-blue-900 mb-6">
-                🗓️ Daftar Jadwal ({schedules.length})
-              </h2>
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                {schedules.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">Belum ada jadwal.</p>
-                ) : (
-                  schedules.map((s, index) => (
-                    <div
-                      key={s.id}
-                      className="p-4 bg-white/70 rounded-xl border border-sky-100 hover:shadow-md transition group"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="font-semibold text-gray-800">{s.date}</p>
-                          <p className="text-sm text-gray-600">{s.time} | {s.location}</p>
-                          <p className="text-sm text-blue-700 mt-1">📌 {s.keterangan}</p>
-                        </div>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => handleEdit(s)}
-                            className="text-blue-500 hover:text-blue-700 text-sm"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleDelete(s.id)}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                          >
-                            ❌
-                          </button>
-                        </div>
-                      </div>
+              <h2 className="text-xl font-bold text-blue-900 mb-6">🗓️ Daftar Jadwal ({schedules.length})</h2>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                {schedules.map((s) => (
+                  <div key={s.id_jadwal} className="p-3 bg-white/70 rounded-lg border border-sky-100">
+                    <p className="font-medium text-gray-800">{s.tempat}</p>
+                    <p className="text-xs text-gray-600">{s.tanggal?.split('T')[0]} | {s.jam_mulai} - {s.jam_selesai}</p>
+                    <p className="text-xs text-blue-600">{s.jenis_jadwal}</p>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleUpdate(s.id_jadwal, { konfirmasi_jadwal: 'dikonfirmasi' })}
+                        className="text-green-500 text-xs hover:underline"
+                      >
+                        Setujui
+                      </button>
+                      <button
+                        onClick={() => handleUpdate(s.id_jadwal, { konfirmasi_jadwal: 'ditolak' })}
+                        className="text-red-500 text-xs hover:underline"
+                      >
+                        Tolak
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id_jadwal)}
+                        className="text-gray-500 text-xs hover:underline"
+                      >
+                        Hapus
+                      </button>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </div>
           </SlideUp>
+
+          {/* Pengajuan Perubahan */}
+          <div className="lg:col-span-2">
+            <SlideUp delay={400}>
+              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
+                <h2 className="text-xl font-bold text-blue-900 mb-6">📬 Pengajuan Perubahan ({pendingRequests.length})</h2>
+                {pendingRequests.length === 0 ? (
+                  <p className="text-gray-500 text-center">Tidak ada pengajuan.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingRequests.map((req) => (
+                      <div key={req.id_jadwal} className="p-4 bg-white/70 rounded-xl border border-amber-100">
+                        <div className="flex justify-between">
+                          <h3 className="font-semibold text-gray-800">Pengajuan untuk Jadwal ID {req.id_jadwal}</h3>
+                          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">Baru</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">Dari: {req.jam_mulai} → {req.jam_mulai_diajukan || 'Tidak diubah'}</p>
+                        <p className="text-sm text-gray-600">Tanggal: {req.tanggal_diajukan?.split('T')[0] || 'Tidak diubah'}</p>
+                        <p className="text-sm text-gray-700 italic mt-1">{req.alasan_perubahan}</p>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => handleUpdate(req.id_jadwal, {
+                              jam_mulai: req.jam_mulai_diajukan,
+                              jam_selesai: req.jam_selesai_diajukan,
+                              tanggal: req.tanggal_diajukan,
+                              konfirmasi_jadwal: 'dikonfirmasi',
+                              pengajuan_perubahan: false,
+                            })}
+                            className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full transition"
+                          >
+                            Setujui & Update
+                          </button>
+                          <button
+                            onClick={() => handleUpdate(req.id_jadwal, { konfirmasi_jadwal: 'ditolak', pengajuan_perubahan: false })}
+                            className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-full transition"
+                          >
+                            Tolak
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </SlideUp>
+          </div>
         </div>
       </div>
     </div>

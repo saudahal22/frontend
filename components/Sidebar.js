@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   const menuItems = [
     { 
-      href: '/dashboard', 
+      href: '/', 
       label: 'Beranda', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,9 +79,9 @@ export default function Sidebar() {
 
           {/* Tombol Hamburger - Sekarang di KANAN ATAS Sidebar */}
           <button
-            onClick={toggleSidebar}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none"
-            aria-label={isOpen ? 'Tutup sidebar' : 'Buka sidebar'}
+             onClick={toggleSidebar}
+            className="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-300 rounded"
+            aria-label={isOpen ? "Tutup sidebar" : "Buka sidebar"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

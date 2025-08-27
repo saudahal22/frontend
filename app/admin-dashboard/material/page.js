@@ -1,161 +1,110 @@
 // app/admin-dashboard/material/page.js
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Sortable from 'sortablejs';
+import { useState, useEffect } from 'react';
 import { FadeIn, SlideUp } from '../../../components/Animations';
+import { apiClient } from '../../../lib/apiClient';
 
 export default function AdminMaterialPage() {
-  const [questions, setQuestions] = useState([]);
-  const [newQuestion, setNewQuestion] = useState({
-    text: '',
-    options: ['', '', '', ''],
-    correct: 0,
+  const [soal, setSoal] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newSoal, setNewSoal] = useState({
+    nomor: '',
+    pertanyaan: '',
+    pilihan_a: '',
+    pilihan_b: '',
+    pilihan_c: '',
+    pilihan_d: '',
+    jawaban_benar: '',
   });
   const [editId, setEditId] = useState(null);
-  const [testDuration, setTestDuration] = useState(30); // menit
-  const [submitStatus, setSubmitStatus] = useState('');
 
-  const listRef = useRef(null);
+  const fetchSoal = async () => {
+    try {
+      const data = await apiClient('/test/soal');
+      setSoal(data.soal || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Load data dari localStorage
   useEffect(() => {
-    const savedQuestions = JSON.parse(localStorage.getItem('coconut_test_questions')) || [];
-    const savedDuration = parseInt(localStorage.getItem('coconut_test_duration')) || 30;
-
-    setQuestions(savedQuestions);
-    setTestDuration(savedDuration);
+    fetchSoal();
   }, []);
 
-  // Inisialisasi SortableJS
-  useEffect(() => {
-    if (listRef.current && questions.length > 0) {
-      const sortable = new Sortable(listRef.current, {
-        animation: 150,
-        ghostClass: 'opacity-50',
-        chosenClass: 'ring-2 ring-blue-500',
-        onEnd: (evt) => {
-          const newItems = Array.from(listRef.current.children).map((el) => {
-            const id = el.getAttribute('data-id');
-            return questions.find(q => q.id == id);
-          });
-          setQuestions(newItems);
-          saveToStorage(newItems, testDuration);
-        },
-      });
-
-      return () => {
-        sortable.destroy();
-      };
-    }
-  }, [questions]);
-
-  // Simpan ke localStorage
-  const saveToStorage = (qList, duration) => {
-    try {
-      localStorage.setItem('coconut_test_questions', JSON.stringify(qList));
-      localStorage.setItem('coconut_test_duration', duration?.toString() || testDuration.toString());
-      setQuestions(qList);
-      setSubmitStatus('Data berhasil disimpan!');
-      setTimeout(() => setSubmitStatus(''), 5000);
-    } catch (error) {
-      console.error('Gagal simpan ke localStorage:', error);
-      setSubmitStatus('Gagal menyimpan data.');
-    }
+  const handleChange = (e) => {
+    setNewSoal({ ...newSoal, [e.target.name]: e.target.value });
   };
 
-  // Handle input opsi
-  const handleOptionChange = (index, value) => {
-    const updatedOptions = [...newQuestion.options];
-    updatedOptions[index] = value;
-    setNewQuestion({ ...newQuestion, options: updatedOptions });
-  };
-
-  // Tambah atau Update soal
-  const handleSubmitQuestion = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const { text, options, correct } = newQuestion;
-
-    if (!text.trim()) {
-      setSubmitStatus('Pertanyaan tidak boleh kosong.');
-      return;
-    }
-    if (options.some(opt => !opt.trim())) {
-      setSubmitStatus('Semua opsi harus diisi.');
-      return;
-    }
-
-    const question = {
-      id: editId || Date.now(),
-      text: text.trim(),
-      options: options.map(opt => opt.trim()),
-      correct: parseInt(correct),
-    };
-
-    let updated;
-    if (editId) {
-      updated = questions.map(q => (q.id === editId ? question : q));
+    try {
+      if (editId) {
+        await apiClient(`/test/soal/update?id=${editId}`, {
+          method: 'PUT',
+          body: JSON.stringify(newSoal),
+        });
+      } else {
+        await apiClient('/test/soal/create', {
+          method: 'POST',
+          body: JSON.stringify(newSoal),
+        });
+      }
+      alert(editId ? 'Soal diperbarui' : 'Soal ditambahkan');
+      setNewSoal({
+        nomor: '',
+        pertanyaan: '',
+        pilihan_a: '',
+        pilihan_b: '',
+        pilihan_c: '',
+        pilihan_d: '',
+        jawaban_benar: '',
+      });
       setEditId(null);
-      setSubmitStatus('Soal berhasil diperbarui.');
-    } else {
-      updated = [question, ...questions];
-      setSubmitStatus('Soal berhasil ditambahkan.');
+      fetchSoal();
+    } catch (err) {
+      setError(err.message);
     }
-
-    saveToStorage(updated);
-    resetForm();
   };
 
-  // Reset form
-  const resetForm = () => {
-    setNewQuestion({
-      text: '',
-      options: ['', '', '', ''],
-      correct: 0,
+  const handleEdit = (s) => {
+    setEditId(s.id_soal);
+    setNewSoal({
+      nomor: s.nomor,
+      pertanyaan: s.pertanyaan,
+      pilihan_a: s.pilihan_a,
+      pilihan_b: s.pilihan_b,
+      pilihan_c: s.pilihan_c,
+      pilihan_d: s.pilihan_d,
+      jawaban_benar: s.jawaban_benar,
     });
   };
 
-  // Edit soal
-  const handleEdit = (q) => {
-    setEditId(q.id);
-    setNewQuestion({
-      text: q.text,
-      options: [...q.options],
-      correct: q.correct,
-    });
-  };
-
-  // Hapus soal
-  const handleDelete = (id) => {
-    const filtered = questions.filter(q => q.id !== id);
-    saveToStorage(filtered);
-    setSubmitStatus('Soal dihapus.');
-    if (editId === id) resetForm();
-  };
-
-  // Ubah durasi tes
-  const handleDurationChange = (e) => {
-    const value = parseInt(e.target.value);
-    setTestDuration(value);
-    saveToStorage(questions, value);
-    setSubmitStatus(`Durasi tes diubah menjadi ${value} menit.`);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Hapus soal ini?')) return;
+    try {
+      await apiClient(`/test/soal/delete?id=${id}`, { method: 'DELETE' });
+      alert('Soal dihapus');
+      fetchSoal();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <FadeIn>
-          <h1 className="text-3xl sm:text-4xl font-bold text-center text-blue-900 mb-4">
-            📚 Kelola Soal & Tes
-          </h1>
-          <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-            Tambah, edit, susun ulang soal, dan atur durasi tes untuk calon anggota.
-          </p>
+          <h1 className="text-3xl font-bold text-center text-blue-900 mb-4">📚 Kelola Soal Tes</h1>
+          <p className="text-center text-gray-600 mb-12">Tambah, edit, atau hapus soal untuk tes seleksi.</p>
         </FadeIn>
 
-        {submitStatus && (
-          <div className="mb-8 p-4 text-sm rounded-lg bg-blue-100 text-blue-800 border border-blue-200 text-center">
-            {submitStatus}
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg text-center">
+            {error}
           </div>
         )}
 
@@ -164,71 +113,75 @@ export default function AdminMaterialPage() {
           <SlideUp delay={200}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
               <h2 className="text-xl font-bold text-blue-900 mb-6">
-                {editId ? '✏️ Edit Soal' : '➕ Tambah Soal Baru'}
+                {editId ? '✏️ Edit Soal' : '➕ Tambah Soal'}
               </h2>
-              <form onSubmit={handleSubmitQuestion} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pertanyaan
-                  </label>
-                  <textarea
-                    value={newQuestion.text}
-                    onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
-                    placeholder="Contoh: Apa output dari kode Python berikut? print(2 ** 3 + 1)"
-                    rows="3"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm resize-none"
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  type="number"
+                  name="nomor"
+                  value={newSoal.nomor}
+                  onChange={handleChange}
+                  placeholder="Nomor"
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+                <input
+                  type="text"
+                  name="pertanyaan"
+                  value={newSoal.pertanyaan}
+                  onChange={handleChange}
+                  placeholder="Pertanyaan"
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+                {['a', 'b', 'c', 'd'].map((opt) => (
+                  <input
+                    key={opt}
+                    type="text"
+                    name={`pilihan_${opt}`}
+                    value={newSoal[`pilihan_${opt}`]}
+                    onChange={handleChange}
+                    placeholder={`Pilihan ${opt.toUpperCase()}`}
                     required
+                    className="w-full p-3 border border-gray-300 rounded-lg"
                   />
-                </div>
-
-                {newQuestion.options.map((opt, idx) => (
-                  <div key={idx}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Opsi {idx + 1}
-                    </label>
-                    <input
-                      type="text"
-                      value={opt}
-                      onChange={(e) => handleOptionChange(idx, e.target.value)}
-                      placeholder={`Jawaban opsi ${idx + 1}`}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                      required
-                    />
-                  </div>
                 ))}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jawaban Benar
-                  </label>
-                  <select
-                    value={newQuestion.correct}
-                    onChange={(e) => setNewQuestion({ ...newQuestion, correct: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                  >
-                    {newQuestion.options.map((_, idx) => (
-                      <option key={idx} value={idx}>
-                        Opsi {idx + 1}: {newQuestion.options[idx] || '(kosong)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+                <select
+                  name="jawaban_benar"
+                  value={newSoal.jawaban_benar}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Jawaban Benar</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-3 rounded-full hover:from-green-600 hover:to-emerald-700 transition"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-semibold transition"
                   >
-                    {editId ? 'Perbarui Soal' : 'Tambah Soal'}
+                    {editId ? 'Perbarui' : 'Tambah'}
                   </button>
                   {editId && (
                     <button
                       type="button"
                       onClick={() => {
                         setEditId(null);
-                        resetForm();
+                        setNewSoal({
+                          nomor: '',
+                          pertanyaan: '',
+                          pilihan_a: '',
+                          pilihan_b: '',
+                          pilihan_c: '',
+                          pilihan_d: '',
+                          jawaban_benar: '',
+                        });
                       }}
-                      className="px-4 py-3 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition"
+                      className="bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-full transition"
                     >
                       Batal
                     </button>
@@ -238,80 +191,34 @@ export default function AdminMaterialPage() {
             </div>
           </SlideUp>
 
-          {/* Daftar Soal + Drag & Drop */}
-          <div className="space-y-6">
-            <SlideUp delay={300}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl font-bold text-blue-900 mb-6">
-                  🔄 Susun & Kelola Soal ({questions.length})
-                </h2>
-                <div
-                  ref={listRef}
-                  className="space-y-4 max-h-60 overflow-y-auto pr-2"
-                >
-                  {questions.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Belum ada soal.</p>
-                  ) : (
-                    questions.map((q) => (
-                      <div
-                        key={q.id}
-                        data-id={q.id}
-                        className="p-4 bg-white/70 rounded-xl border border-sky-100 cursor-move hover:shadow-md transition group"
+          {/* Daftar Soal */}
+          <SlideUp delay={300}>
+            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
+              <h2 className="text-xl font-bold text-blue-900 mb-6">📋 Daftar Soal ({soal.length})</h2>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {soal.map((s) => (
+                  <div key={s.id_soal} className="p-4 bg-white/70 rounded-lg border border-sky-100">
+                    <p className="font-medium text-gray-800">{s.nomor}. {s.pertanyaan}</p>
+                    <p className="text-sm text-gray-600 mt-1">Jawaban: <strong>{s.jawaban_benar}</strong></p>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleEdit(s)}
+                        className="text-blue-500 text-xs hover:underline"
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs font-semibold text-sky-700">Soal #{questions.findIndex(x => x.id === q.id) + 1}</span>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(q);
-                              }}
-                              className="text-blue-500 hover:text-blue-700 text-sm"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(q.id);
-                              }}
-                              className="text-red-500 hover:text-red-700 text-sm"
-                            >
-                              ❌
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-800 line-clamp-2">{q.text}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id_soal)}
+                        className="text-red-500 text-xs hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </SlideUp>
-
-            {/* Pengaturan Durasi Tes */}
-            <SlideUp delay={400}>
-              <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-                <h2 className="text-xl font-bold text-blue-900 mb-4">⏱️ Durasi Tes</h2>
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Durasi (menit)
-                  </label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="180"
-                    value={testDuration}
-                    onChange={handleDurationChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none text-sm"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Timer akan otomatis berjalan di halaman tes pengguna.
-                  </p>
-                </div>
-              </div>
-            </SlideUp>
-          </div>
+            </div>
+          </SlideUp>
         </div>
       </div>
     </div>
