@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
 
@@ -19,21 +20,54 @@ export default function AdminMaterialPage() {
     jawaban_benar: '',
   });
   const [editId, setEditId] = useState(null);
+  const [userRole, setUserRole] = useState(null); // ✅ Untuk cek role
+
+  const router = useRouter();
+
+  // 🔐 Cek login dan role saat komponen dimount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect ke login jika belum login
+      router.push('/login');
+      return;
+    }
+
+    // Ambil profil untuk cek role
+    const fetchProfile = async () => {
+      try {
+        const data = await apiClient('/profile');
+        const role = data.role || data.Role || 'user';
+
+        if (role !== 'admin') {
+          // ❌ Bukan admin → redirect ke dashboard
+          alert('Akses ditolak: Halaman ini hanya untuk admin.');
+          router.push('/dashboard');
+          return;
+        }
+
+        setUserRole('admin');
+        fetchSoal();
+      } catch (err) {
+        console.error('Gagal muat profil:', err);
+        setError('Gagal memverifikasi akses. Silakan login ulang.');
+        router.push('/login');
+      }
+    };
+
+    fetchProfile();
+  }, [router]);
 
   const fetchSoal = async () => {
     try {
       const data = await apiClient('/test/soal');
-      setSoal(data.soal || []);
+      setSoal(Array.isArray(data.soal) ? data.soal : []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Gagal memuat soal');
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchSoal();
-  }, []);
 
   const handleChange = (e) => {
     setNewSoal({ ...newSoal, [e.target.name]: e.target.value });
@@ -93,6 +127,26 @@ export default function AdminMaterialPage() {
       setError(err.message);
     }
   };
+
+  // Tampilkan loading saat pengecekan
+  if (!userRole || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-lg text-gray-600">Memeriksa akses...</p>
+      </div>
+    );
+  }
+
+  // Tampilkan error jika ada
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">

@@ -2,21 +2,41 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // ✅ Tambahkan router
 import Image from "next/image";
 import { FadeIn, SlideUp } from "../../../components/Animations";
 import { apiClient } from "../../../lib/apiClient";
 
 export default function ProfilePage() {
-  const [isLoggedIn] = useState(true);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const [fullName, setFullName] = useState(""); // Untuk input edit nama
+  const [fullName, setFullName] = useState("");
 
-  // 🔹 Ambil API URL dari environment
+  const router = useRouter(); // ✅ Inisialisasi router
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://cocopen-production.up.railway.app";
+
+  // 🔐 Cek login saat komponen dimount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Redirect ke login jika belum login
+      router.push("/login");
+      return;
+    }
+
+    // Jika sudah login, ambil data profil
+    fetchProfile();
+
+    const handleStorageChange = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [router]);
 
   const fetchProfile = async () => {
     try {
@@ -46,19 +66,8 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-
-    const handleStorageChange = () => {
-      fetchProfile();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
   const handleProfileClick = () => {
-    setFullName(profile.fullName); // Isi input dengan nama saat ini
+    setFullName(profile.fullName);
     setIsEditing(true);
   };
 
@@ -71,13 +80,11 @@ export default function ProfilePage() {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
 
-    // Validasi nama
     if (!fullName.trim()) {
       setError("Nama lengkap wajib diisi");
       return;
     }
 
-    // Validasi file jika ada
     if (file) {
       const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
       if (!validTypes.includes(file.type)) {
@@ -95,10 +102,7 @@ export default function ProfilePage() {
 
     const formData = new FormData();
     formData.append("full_name", fullName.trim());
-
-    if (file) {
-      formData.append("profile_picture", file);
-    }
+    if (file) formData.append("profile_picture", file);
 
     try {
       const result = await apiClient("/profile/update", {
@@ -128,23 +132,18 @@ export default function ProfilePage() {
     }
   };
 
-  if (!isLoggedIn) {
+  // Tampilkan loading selama pengecekan login
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Akses Ditolak</h2>
-          <p className="text-gray-600">Anda harus masuk untuk melihat profil.</p>
-        </div>
+        <p className="text-lg text-gray-600">Memeriksa akses...</p>
       </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memuat profil...</p>
-      </div>
-    );
+  // Jika sudah redirect, jangan render apapun
+  if (!profile) {
+    return null;
   }
 
   return (
@@ -205,7 +204,6 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Profil</h3>
 
-            {/* Input Nama Lengkap */}
             <div className="mb-4">
               <label className="block text-left text-sm font-medium text-gray-700 mb-1">
                 Nama Lengkap

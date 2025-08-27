@@ -19,47 +19,55 @@ export default function TestPage() {
   const [showResult, setShowResult] = useState(false);
   const [resultData, setResultData] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  // Cek hasil atau ambil soal
+  // 🔐 Cek login saat komponen dimount
   useEffect(() => {
-    const fetchHasil = async () => {
-      try {
-        const data = await apiClient('/test/hasil');
-        setResultData(data);
-        setShowResult(true);
-        setLoading(false);
-      } catch (err) {
-        if (err.message.includes('belum mengikuti tes')) {
-          fetchSoal();
-        } else {
-          setError(err.message);
-          setLoading(false);
-        }
-      }
-    };
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect ke login jika belum login
+      router.push('/login');
+      return;
+    }
 
-    const fetchSoal = async () => {
-      try {
-        const data = await apiClient('/test/soal');
-        setSoal(data.soal);
-        setDurasi(data.durasi_menit || 60);
-        setJudul(data.judul || 'Tes Seleksi');
-        setDeskripsi(data.deskripsi || '');
-        setTimeLeft((data.durasi_menit || 60) * 60);
-      } catch (err) {
+    setIsLoggedIn(true);
+    fetchTestData();
+  }, [router]);
+
+  const fetchTestData = async () => {
+    try {
+      // Cek apakah sudah ada hasil
+      const data = await apiClient('/test/hasil');
+      setResultData(data);
+      setShowResult(true);
+    } catch (err) {
+      if (err.message.includes('belum mengikuti tes')) {
+        fetchSoal();
+      } else {
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchHasil();
-  }, []);
+  const fetchSoal = async () => {
+    try {
+      const data = await apiClient('/test/soal');
+      setSoal(data.soal || []);
+      setDurasi(data.durasi_menit || 60);
+      setJudul(data.judul || 'Tes Seleksi');
+      setDeskripsi(data.deskripsi || '');
+      setTimeLeft((data.durasi_menit || 60) * 60);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   // Timer
   useEffect(() => {
-    if (isSubmitted || timeLeft <= 0 || soal.length === 0) return;
+    if (!isLoggedIn || isSubmitted || timeLeft <= 0 || soal.length === 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((t) => {
@@ -73,7 +81,7 @@ export default function TestPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isSubmitted, soal.length]);
+  }, [timeLeft, isSubmitted, soal.length, isLoggedIn]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -114,22 +122,27 @@ export default function TestPage() {
     }
   };
 
-  if (loading) {
+  // Tampilkan loading saat cek login
+  if (!isLoggedIn || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Memuat...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-lg text-gray-600">Memeriksa akses...</p>
       </div>
     );
   }
 
+  // Tampilkan error jika ada
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
       </div>
     );
   }
 
+  // Tampilkan hasil jika sudah pernah tes
   if (showResult && resultData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
@@ -157,7 +170,7 @@ export default function TestPage() {
     );
   }
 
-  // Tampilkan soal jika sudah dimuat
+  // Tampilkan soal
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
       <div className="max-w-6xl mx-auto">

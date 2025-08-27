@@ -2,15 +2,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ Tambahkan router
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
 
 export default function StatusPage() {
-  const [isLoggedIn] = useState(true);
   const [status, setStatus] = useState('Menunggu Hasil');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [latestPendaftar, setLatestPendaftar] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Untuk kontrol render
+
+  const router = useRouter(); // ✅ Inisialisasi router
+
+  // 🔐 Cek login saat komponen dimount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect ke login jika belum login
+      router.push('/login');
+      return;
+    }
+
+    setIsLoggedIn(true);
+    fetchStatus();
+
+    // Dengarkan perubahan (jika admin update dari tab lain)
+    const handleStorageChange = () => {
+      fetchStatus();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [router]);
 
   // Ambil status pendaftaran dari backend
   const fetchStatus = async () => {
@@ -41,33 +65,22 @@ export default function StatusPage() {
     }
   };
 
-  useEffect(() => {
-    fetchStatus();
-
-    // Dengarkan perubahan (jika admin update dari tab lain)
-    const handleStorageChange = () => {
-      fetchStatus();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  if (!isLoggedIn) {
+  // Tampilkan loading saat cek login
+  if (!isLoggedIn || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Akses Ditolak</h2>
-          <p className="text-gray-600">Anda harus masuk untuk melihat status seleksi.</p>
-        </div>
+        <p className="text-lg text-gray-600">Memeriksa akses...</p>
       </div>
     );
   }
 
-  if (loading) {
+  // Tampilkan error jika ada
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memuat status seleksi...</p>
+        <div className="text-center">
+          <p className="text-red-500 text-lg">{error}</p>
+        </div>
       </div>
     );
   }
