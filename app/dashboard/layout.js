@@ -1,23 +1,28 @@
-// app/dashboard/layout.js
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Hanya gunakan layout ini di rute /dashboard
   if (!pathname.startsWith('/dashboard')) return children;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
-      {/* Konten Utama (tanpa Navbar) */}
-      <div className="flex-1 lg:ml-64 min-h-screen bg-white">
-        <main className="pt-10 px-6 py-8">{children}</main>
+      {/* Konten Utama */}
+      <div className="flex-1 min-h-screen bg-white lg:ml-64 transition-all">
+        {/* Navbar kecil (muncul hanya di mobile) */}
+        <div className="p-4 lg:hidden">
+          {/* tombol toggle bisa taruh di sini kalau mau */}
+        </div>
+
+        <main className="pt-4 px-6 py-8">{children}</main>
       </div>
     </div>
   );
