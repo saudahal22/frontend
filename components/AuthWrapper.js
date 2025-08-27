@@ -14,6 +14,7 @@ export default function AuthWrapper({ children, requiredRole = null }) {
     if (!token) {
       alert('Silakan login terlebih dahulu.');
       router.push('/login');
+      setIsLoading(false);
       return;
     }
 
@@ -23,27 +24,24 @@ export default function AuthWrapper({ children, requiredRole = null }) {
       if (requiredRole && payload.role !== requiredRole) {
         alert(`Akses ditolak: Anda bukan ${requiredRole}.`);
         router.push(payload.role === 'admin' ? '/admin-dashboard' : '/');
-        return;
-      }
-
-      if (!requiredRole && payload.role === 'admin' && !router.pathname.startsWith('/admin-dashboard')) {
-        router.push('/admin-dashboard');
+        setIsLoading(false);
         return;
       }
     } catch (e) {
       console.error('Token tidak valid:', e);
       localStorage.clear();
       router.push('/login');
-      return;
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    setIsLoading(false);
   }, [router]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p>Memeriksa autentikasi...</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-700">Memeriksa akses...</p>
       </div>
     );
   }
