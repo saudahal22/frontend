@@ -7,6 +7,7 @@ import { FadeIn, SlideUp } from '../../components/Animations';
 import Spinner from '../../components/Spinner';
 import { apiClient } from '../../lib/apiClient';
 import { useRouter } from 'next/navigation';
+import jwtDecode from 'jwt-decode';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -45,12 +46,11 @@ export default function LoginPage() {
     // 🔔 Trigger event agar komponen lain tahu user sudah login
     window.dispatchEvent(new Event('storage'));
 
-    // 🚀 Redirect berdasarkan role
     if (data.user?.role === 'admin') {
-      router.push('/admin-dashboard');
-    } else {
-      router.push('/');
-    }
+  router.push('/admin-dashboard');
+} else {
+  router.push('/');
+}
 
     router.refresh();
   } catch (err) {
