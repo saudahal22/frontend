@@ -16,44 +16,49 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!username || !password) {
-      setError('Semua field wajib diisi');
-      return;
+  if (!username || !password) {
+    setError('Semua field wajib diisi');
+    return;
+  }
+
+  setError('');
+  setLoading(true);
+
+  try {
+    const data = await apiClient('/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+
+    // ✅ Simpan token
+    if (data.token) {
+      localStorage.setItem('token', data.token);
     }
 
-    setError('');
-    setLoading(true);
+    // ✅ Simpan user
+    if (data.user) {
+      localStorage.setItem('coconut_user', JSON.stringify(data.user));
+    }
 
-    try {
-      const data = await apiClient('/login', {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      });
+    // 🔔 Trigger event agar komponen lain tahu user sudah login
+    window.dispatchEvent(new Event('storage'));
 
-      // ✅ Simpan token
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      // ✅ Simpan user dengan key yang sesuai Navbar
-      if (data.user) {
-        localStorage.setItem('coconut_user', JSON.stringify(data.user));
-      }
-
-      // 🔔 Trigger event agar Navbar (dan tab lain) tahu user sudah login
-      window.dispatchEvent(new Event('storage'));
-
-      // 🚀 Redirect ke halaman utama
+    // 🚀 Redirect berdasarkan role
+    if (data.user?.role === 'admin') {
+      router.push('/admin-dashboard');
+    } else {
       router.push('/');
-      router.refresh(); // opsional: refresh state
-    } catch (err) {
-      setError(err.message || 'Login gagal. Cek kembali data Anda.');
-    } finally {
-      setLoading(false);
     }
-  };
+
+    router.refresh();
+  } catch (err) {
+    setError(err.message || 'Login gagal. Cek kembali data Anda.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
