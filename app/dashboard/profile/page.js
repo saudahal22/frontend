@@ -16,14 +16,14 @@ export default function ProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const data = await apiClient("/profile"); // 🔥 Langsung ke backend
+      const data = await apiClient("/profile");
 
       setProfile({
         fullName: data.full_name || data.FullName,
         email: data.email || data.Email,
         statusKeanggotaan: data.status_keanggotaan || data.StatusKeanggotaan,
         profilePicture: data.profile_picture
-          ? `/uploads/${data.profile_picture}`
+          ? `/uploads/profile/${data.profile_picture}`
           : "/default-avatar.png",
         tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung,
       });
@@ -66,19 +66,6 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 🔍 Validasi ukuran file (opsional tapi disarankan)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File terlalu besar. Maksimal 5MB.");
-      return;
-    }
-
-    // 🔍 Validasi format file
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      alert("Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.");
-      return;
-    }
-
     setUploading(true);
     setError("");
 
@@ -87,19 +74,19 @@ export default function ProfilePage() {
     formData.append("profile_picture", file);
 
     try {
-      // ✅ HAPUS headers: { 'Content-Type': ... }
-      await apiClient("/profile/update", {
+      const result = await apiClient("/profile/update", {
         method: "PUT",
         body: formData,
-        // ❌ Jangan set Content-Type → biarkan browser yang atur otomatis
       });
 
-      // ✅ Update state: gunakan nama file dari backend jika bisa
-      const timestamp = new Date().getTime();
-      setProfile((prev) => ({
-        ...prev,
-        profilePicture: `/uploads/${file.name}?t=${timestamp}`,
-      }));
+      const uploadedFileName = result.data?.profile_picture;
+
+      if (uploadedFileName) {
+        setProfile((prev) => ({
+          ...prev,
+          profilePicture: `/uploads/profile/${uploadedFileName}?t=${Date.now()}`,
+        }));
+      }
 
       alert("Profil berhasil diperbarui!");
     } catch (err) {
