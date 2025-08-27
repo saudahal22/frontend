@@ -121,7 +121,7 @@ export default function Sidebar() {
           <button
             onClick={() => {
               if (confirm('Yakin ingin keluar dari akun Anda?')) {
-                localStorage.removeItem('coconut_user'); // ✅ Key token kamu
+                localStorage.removeItem('token'); // ✅ Key token kamu
                 router.push('/login'); // ✅ Redirect ke login dengan Next.js router
               }
             }}
