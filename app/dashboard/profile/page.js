@@ -1,10 +1,10 @@
 // app/dashboard/profile/page.js
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { FadeIn, SlideUp } from '../../../components/Animations';
-import { apiClient } from '../../../lib/apiClient'; // ✅ Gunakan apiClient
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { FadeIn, SlideUp } from "../../../components/Animations";
+import { apiClient } from "../../../lib/apiClient"; // ✅ Gunakan apiClient
 
 export default function ProfilePage() {
   const [isLoggedIn] = useState(true);
@@ -12,11 +12,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const fetchProfile = async () => {
     try {
-      const data = await apiClient('/profile'); // 🔥 Langsung ke backend
+      const data = await apiClient("/profile"); // 🔥 Langsung ke backend
 
       setProfile({
         fullName: data.full_name || data.FullName,
@@ -24,18 +24,18 @@ export default function ProfilePage() {
         statusKeanggotaan: data.status_keanggotaan || data.StatusKeanggotaan,
         profilePicture: data.profile_picture
           ? `/uploads/${data.profile_picture}`
-          : '/default-avatar.png',
+          : "/default-avatar.png",
         tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung,
       });
     } catch (err) {
-      console.error('Gagal muat profil:', err);
+      console.error("Gagal muat profil:", err);
       setError(err.message);
       setProfile({
-        fullName: 'Pengguna',
-        email: 'error@coconut.or.id',
-        statusKeanggotaan: 'Tidak Dikenal',
-        profilePicture: '/default-avatar.png',
-        tanggalBergabung: '-',
+        fullName: "Pengguna",
+        email: "error@coconut.or.id",
+        statusKeanggotaan: "Tidak Dikenal",
+        profilePicture: "/default-avatar.png",
+        tanggalBergabung: "-",
       });
     } finally {
       setLoading(false);
@@ -49,8 +49,8 @@ export default function ProfilePage() {
       fetchProfile();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const handleProfileClick = () => {
@@ -59,42 +59,53 @@ export default function ProfilePage() {
 
   const closeModal = () => {
     setIsEditing(false);
-    setError('');
+    setError("");
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 🔍 Validasi ukuran file (opsional tapi disarankan)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File terlalu besar. Maksimal 5MB.");
+      return;
+    }
+
+    // 🔍 Validasi format file
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      alert("Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.");
+      return;
+    }
+
     setUploading(true);
-    setError('');
+    setError("");
 
     const formData = new FormData();
-    formData.append('full_name', profile.fullName);
-    formData.append('profile_picture', file);
+    formData.append("full_name", profile.fullName);
+    formData.append("profile_picture", file);
 
     try {
-      // ✅ Gunakan apiClient dengan headers multipart
-      await apiClient('/profile/update', {
-        method: 'PUT',
+      // ✅ HAPUS headers: { 'Content-Type': ... }
+      await apiClient("/profile/update", {
+        method: "PUT",
         body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data', // ⚠️ apiClient akan handle otomatis
-        },
+        // ❌ Jangan set Content-Type → biarkan browser yang atur otomatis
       });
 
-      // Update foto lokal (dengan timestamp agar tidak cache)
+      // ✅ Update state: gunakan nama file dari backend jika bisa
       const timestamp = new Date().getTime();
       setProfile((prev) => ({
         ...prev,
         profilePicture: `/uploads/${file.name}?t=${timestamp}`,
       }));
 
-      alert('Profil berhasil diperbarui!');
+      alert("Profil berhasil diperbarui!");
     } catch (err) {
-      console.error('Gagal update profil:', err);
+      console.error("Gagal update profil:", err);
       setError(err.message);
-      alert('Gagal mengunggah foto. Cek format (JPG/PNG) dan ukuran file.');
+      alert("Gagal mengunggah foto. Cek format (JPG/PNG) dan ukuran file.");
     } finally {
       setUploading(false);
       closeModal();
@@ -106,7 +117,9 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800">Akses Ditolak</h2>
-          <p className="text-gray-600">Anda harus masuk untuk melihat profil.</p>
+          <p className="text-gray-600">
+            Anda harus masuk untuk melihat profil.
+          </p>
         </div>
       </div>
     );
@@ -149,14 +162,20 @@ export default function ProfilePage() {
                     unoptimized // Karena dari /uploads/
                   />
                   <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <span className="text-white text-xs font-medium">Ganti Foto</span>
+                    <span className="text-white text-xs font-medium">
+                      Ganti Foto
+                    </span>
                   </div>
                 </div>
 
                 <div className="text-center md:text-left flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">{profile.fullName}</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {profile.fullName}
+                  </h2>
                   <p className="text-gray-600">{profile.email}</p>
-                  <p className="text-sm text-blue-600 font-medium">{profile.statusKeanggotaan}</p>
+                  <p className="text-sm text-blue-600 font-medium">
+                    {profile.statusKeanggotaan}
+                  </p>
                   <p className="text-sm text-gray-500 mt-1">
                     Bergabung: {profile.tanggalBergabung}
                   </p>
@@ -171,8 +190,12 @@ export default function ProfilePage() {
       {isEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Ganti Foto Profil</h3>
-            <p className="text-sm text-gray-600 mb-5">Format: JPG, JPEG, PNG (maks 5MB)</p>
+            <h3 className="text-lg font-bold text-gray-800 mb-4">
+              Ganti Foto Profil
+            </h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Format: JPG, JPEG, PNG (maks 5MB)
+            </p>
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
 
@@ -188,7 +211,7 @@ export default function ProfilePage() {
               htmlFor="photo-upload"
               className="block w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg font-medium cursor-pointer transition mb-3"
             >
-              {uploading ? 'Mengunggah...' : 'Pilih Foto'}
+              {uploading ? "Mengunggah..." : "Pilih Foto"}
             </label>
 
             <button
@@ -207,8 +230,12 @@ export default function ProfilePage() {
           animation: fade-in 0.3s ease-out;
         }
         @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
       `}</style>
     </div>
