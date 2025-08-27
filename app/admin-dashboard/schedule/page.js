@@ -1,5 +1,5 @@
-// app/admin-dashboard/schedule/page.js
 'use client';
+// app/admin-dashboard/schedule/page.js
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
