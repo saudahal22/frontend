@@ -28,17 +28,21 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [registrationData, setRegistrationData] = useState([]);
 
-  // ✅ Fungsi fetch data dengan penanganan error
   const fetchData = async () => {
     try {
+      // Tambahkan log untuk debug
+      console.log("Mengambil data pendaftar...");
       const pendaftarRes = await apiClient('/pendaftar/all');
       const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
+      console.log("Pendaftar:", pendaftar);
 
       const jadwalRes = await apiClient('/jadwal/all');
       const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
+      console.log("Jadwal:", jadwal);
 
       const hasilRes = await apiClient('/test/hasil');
       const hasil = Array.isArray(hasilRes) ? hasilRes : [];
+      console.log("Hasil Tes:", hasil);
 
       // Hitung statistik
       const total = pendaftar.length;
@@ -107,7 +111,7 @@ export default function AdminDashboard() {
 
       setRegistrationData(cumulativeData);
     } catch (err) {
-      console.error("Gagal ambil data dashboard:", err); // 👈 DEBUG
+      console.error("Gagal ambil data dashboard:", err);
       setError(err.message || "Gagal memuat data dashboard");
     } finally {
       setLoading(false);
@@ -115,12 +119,14 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setLoading(true); // Pastikan loading dimulai
     fetchData();
+
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // 🔹 Jika loading, tampilkan loader
+  // 🔹 Tampilkan loader saat loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
@@ -129,16 +135,16 @@ export default function AdminDashboard() {
     );
   }
 
-  // 🔹 Jika error, tampilkan pesan
+  // 🔹 Tampilkan error jika gagal
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg max-w-md text-center">
-          <h3 className="font-bold">Gagal Memuat Dashboard</h3>
-          <p>{error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg max-w-md text-center shadow-lg">
+          <h3 className="font-bold text-lg">Gagal Memuat Dashboard</h3>
+          <p className="mt-2 text-sm">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 text-sm text-blue-600 hover:underline"
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
           >
             Coba Lagi
           </button>
@@ -147,7 +153,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // ✅ Render UI jika data sudah siap
+  // ✅ Render UI jika sukses
   const statsCards = [
     {
       label: 'Total Calon Anggota',

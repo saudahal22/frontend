@@ -11,19 +11,17 @@ export default function AuthWrapper({ children, requiredRole = null }) {
     const token = localStorage.getItem('token');
 
     if (!token) {
+      alert('Silakan login terlebih dahulu.');
       router.push('/login');
       return;
     }
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-
+      
       if (requiredRole && payload.role !== requiredRole) {
-        if (payload.role === 'admin') {
-          router.push('/admin-dashboard');
-        } else {
-          router.push('/');
-        }
+        alert(`Akses ditolak: Anda bukan ${requiredRole}.`);
+        router.push(payload.role === 'admin' ? '/admin-dashboard' : '/');
         return;
       }
 
@@ -32,7 +30,7 @@ export default function AuthWrapper({ children, requiredRole = null }) {
         return;
       }
     } catch (e) {
-      console.error("Token invalid:", e);
+      console.error('Token tidak valid:', e);
       localStorage.clear();
       router.push('/login');
       return;
