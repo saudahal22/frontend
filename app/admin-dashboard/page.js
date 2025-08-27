@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [registrationData, setRegistrationData] = useState([]);
 
+  // ✅ Fungsi fetch data dengan penanganan error
   const fetchData = async () => {
     try {
       const pendaftarRes = await apiClient('/pendaftar/all');
@@ -39,6 +40,7 @@ export default function AdminDashboard() {
       const hasilRes = await apiClient('/test/hasil');
       const hasil = Array.isArray(hasilRes) ? hasilRes : [];
 
+      // Hitung statistik
       const total = pendaftar.length;
       const pending = pendaftar.filter(p => p.status === 'pending').length;
       const diterima = pendaftar.filter(p => p.status === 'diterima').length;
@@ -46,6 +48,7 @@ export default function AdminDashboard() {
 
       setStats({ totalPendaftar: total, pending, diterima, jadwalMendatang });
 
+      // Aktivitas terbaru
       const activities = [];
 
       jadwal
@@ -83,6 +86,7 @@ export default function AdminDashboard() {
 
       setRecentActivities(activities.slice(0, 6));
 
+      // Data grafik
       const dailyData = {};
       pendaftar.forEach(p => {
         const day = new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long' });
@@ -103,7 +107,8 @@ export default function AdminDashboard() {
 
       setRegistrationData(cumulativeData);
     } catch (err) {
-      setError(err.message);
+      console.error("Gagal ambil data dashboard:", err); // 👈 DEBUG
+      setError(err.message || "Gagal memuat data dashboard");
     } finally {
       setLoading(false);
     }
@@ -115,6 +120,34 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // 🔹 Jika loading, tampilkan loader
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <p className="text-lg text-gray-600">Memuat data dashboard...</p>
+      </div>
+    );
+  }
+
+  // 🔹 Jika error, tampilkan pesan
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg max-w-md text-center">
+          <h3 className="font-bold">Gagal Memuat Dashboard</h3>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm text-blue-600 hover:underline"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Render UI jika data sudah siap
   const statsCards = [
     {
       label: 'Total Calon Anggota',
@@ -141,14 +174,6 @@ export default function AdminDashboard() {
       color: 'from-purple-400 to-purple-600',
     },
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memeriksa izin dan memuat data...</p>
-      </div>
-    );
-  }
 
   return (
     <AuthWrapper requiredRole="admin">
