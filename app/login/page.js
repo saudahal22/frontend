@@ -1,62 +1,87 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FadeIn, SlideUp } from '../../components/Animations';
-import Spinner from '../../components/Spinner';
-import { apiClient } from '../../lib/apiClient';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { FadeIn, SlideUp } from "../../components/Animations";
+import Spinner from "../../components/Spinner";
+import { apiClient } from "../../lib/apiClient";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   // LoginPage.js - handleSubmit
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!username || !password) {
-    setError('Semua field wajib diisi');
-    return;
-  }
-
-  setError('');
-  setLoading(true);
-
-  try {
-    const data = await apiClient('/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (data.token) {
-      localStorage.setItem('token', data.token);
+    if (!username || !password) {
+      setError("Semua field wajib diisi");
+      return;
     }
 
-    if (data.user) {
-      localStorage.setItem('coconut_user', JSON.stringify(data.user));
+    setError("");
+    setLoading(true);
+
+    try {
+      const data = await apiClient("/login", {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+
+        // 🔓 Decode token untuk baca role
+        const decoded = decodeToken(data.token);
+
+        // Simpan user dari hasil decode (opsional)
+        localStorage.setItem(
+          "coconut_user",
+          JSON.stringify({
+            id_user: decoded.id_user,
+            username: decoded.username,
+            full_name: decoded.full_name,
+            role: decoded.role,
+            profile_picture: decoded.profile_picture,
+          })
+        );
+
+        // Beri tahu aplikasi bahwa ada perubahan login
+        window.dispatchEvent(new Event("storage"));
+
+        // 🔁 Redirect berdasarkan role dari token
+        if (decoded.role === "admin") {
+          router.push("/admin-dashboard");
+        } else {
+          router.push("/");
+        }
+
+        router.refresh();
+      }
+    } catch (err) {
+      setError(
+        err.message || "Login gagal. Periksa kembali username dan password."
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-    window.dispatchEvent(new Event('storage'));
-
-    // 🔁 Redirect berdasarkan role
-    if (data.user?.role === 'admin') {
-      router.push('/admin-dashboard');
-    } else {
-      router.push('/');
+  // 🔐 Fungsi helper: decode JWT
+  const decodeToken = (token) => {
+    try {
+      const payload = token.split(".")[1]; // Ambil bagian payload
+      return JSON.parse(atob(payload)); // Decode base64 dan parse JSON
+    } catch (e) {
+      console.error("Gagal decode token:", e);
+      return null;
     }
-
-    router.refresh();
-  } catch (err) {
-    setError(err.message || 'Login gagal. Periksa kembali username dan password.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
@@ -85,10 +110,10 @@ const handleSubmit = async (e) => {
                 width={250}
                 height={340}
                 style={{
-                  width: '250px',
-                  height: '340px',
+                  width: "250px",
+                  height: "340px",
                   opacity: 0.1,
-                  objectFit: 'contain',
+                  objectFit: "contain",
                 }}
                 className="opacity-10"
               />
@@ -184,7 +209,7 @@ const handleSubmit = async (e) => {
                         Logging in...
                       </>
                     ) : (
-                      'Login'
+                      "Login"
                     )}
                   </button>
                 </SlideUp>
