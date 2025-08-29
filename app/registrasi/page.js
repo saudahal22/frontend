@@ -335,7 +335,7 @@ export default function RegisterPage() {
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-gray-600 mb-1"
                   >
                     Konfirmasi Password
                   </label>
