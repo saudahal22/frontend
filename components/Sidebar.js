@@ -1,18 +1,26 @@
 // components/Sidebar.js
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation'; // ← Tambahkan useRouter
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // ← Tambahkan useEffect
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter(); // ← Inisialisasi router
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+
+  // 🔍 Pengecekan token saat komponen dimount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect ke login jika token tidak ada
+      router.push('/login');
+    }
+  }, [router]);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
-  // ✅ Menu hanya sekali, tidak duplikat
   const menuItems = [
     { 
       href: '/', 
@@ -63,7 +71,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Tombol Hamburger (hanya muncul di mobile) */}
+      {/* Tombol Hamburger */}
       <button
         onClick={toggleSidebar}
         className="lg:hidden fixed top-4 left-4 z-50 text-gray-700 bg-white p-2 rounded-md shadow-md"
@@ -87,12 +95,10 @@ export default function Sidebar() {
           lg:translate-x-0
         `}
       >
-        {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <span className="text-xl font-semibold text-gray-800">Menu</span>
         </div>
 
-        {/* Menu Navigasi */}
         <nav className="mt-4 flex-1 px-2 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
@@ -121,8 +127,9 @@ export default function Sidebar() {
           <button
             onClick={() => {
               if (confirm('Yakin ingin keluar dari akun Anda?')) {
-                localStorage.removeItem('token'); // ✅ Key token kamu
-                router.push('/login'); // ✅ Redirect ke login dengan Next.js router
+                localStorage.removeItem('token');
+                localStorage.removeItem('coconut_user'); // Opsional: bersihkan user data
+                router.push('/login');
               }
             }}
             className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
@@ -135,7 +142,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Overlay (hanya muncul di mobile saat sidebar terbuka) */}
+      {/* Overlay */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/40 z-30"
