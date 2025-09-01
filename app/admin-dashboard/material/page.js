@@ -48,21 +48,7 @@ export default function AdminMaterialPage() {
     fetchSoal();
   }, [router]);
 
-  const fetchSoal = async () => {
-    try {
-      setLoading(true);
-      const data = await apiClient('/test/soal');
-      setSoal(Array.isArray(data.soal) ? data.soal : []);
-    } catch (err) {
-      setError(err.message || 'Gagal memuat soal');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    setNewSoal({ ...newSoal, [e.target.name]: e.target.value });
-  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
