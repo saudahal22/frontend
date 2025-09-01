@@ -369,7 +369,7 @@ export default function RegisterPage() {
             <button
               onClick={() => {
                 setShowSuccessModal(false);
-                router.push('/dashboard');
+                router.push('/dashboard/profile');
               }}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition"
             >

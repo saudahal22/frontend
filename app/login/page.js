@@ -1,3 +1,4 @@
+// app/login/page.js
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { FadeIn, SlideUp } from '../../components/Animations';
 import Spinner from '../../components/Spinner';
 import { apiClient } from '../../lib/apiClient';
 import { useRouter } from 'next/navigation';
+import { decodeToken } from '../../lib/auth'; // ✅ Gunakan dari auth.js
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -34,12 +36,19 @@ export default function LoginPage() {
       });
 
       if (data.token) {
+        // Simpan token
         localStorage.setItem('token', data.token);
 
-        // 🔓 Decode token untuk baca role
+        // Decode token untuk baca role
         const decoded = decodeToken(data.token);
 
-        // Simpan user dari hasil decode (opsional)
+        if (!decoded) {
+          setError('Token tidak valid. Silakan coba lagi.');
+          setLoading(false);
+          return;
+        }
+
+        // Simpan data user (opsional, untuk keperluan frontend)
         localStorage.setItem(
           'coconut_user',
           JSON.stringify({
@@ -51,33 +60,25 @@ export default function LoginPage() {
           })
         );
 
-        // Beri tahu aplikasi bahwa ada perubahan login
+        // Beri tahu aplikasi bahwa login berhasil (untuk sinkronisasi tab)
         window.dispatchEvent(new Event('storage'));
 
-        // 🔁 Redirect berdasarkan role dari token
+        // Redirect berdasarkan role
         if (decoded.role === 'admin') {
           router.push('/admin-dashboard');
         } else {
-          router.push('/'); // Arahkan ke beranda
+          router.push('/'); // Arahkan ke beranda untuk user
         }
 
+        // Refresh untuk memastikan state terbaru
         router.refresh();
+      } else {
+        setError('Login gagal: Token tidak diterima dari server.');
       }
     } catch (err) {
       setError(err.message || 'Login gagal. Periksa kembali username dan password.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // 🔐 Fungsi helper: decode JWT
-  const decodeToken = (token) => {
-    try {
-      const payload = token.split('.')[1]; // Ambil bagian payload
-      return JSON.parse(atob(payload)); // Decode base64 dan parse JSON
-    } catch (e) {
-      console.error('Gagal decode token:', e);
-      return null;
     }
   };
 
@@ -158,7 +159,7 @@ export default function LoginPage() {
                       Password
                     </label>
                     <input
-                      type={showPassword ? 'text' : 'password'} // 🔁 Dinamis berdasarkan state
+                      type={showPassword ? 'text' : 'password'}
                       id="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -166,7 +167,7 @@ export default function LoginPage() {
                                  focus:ring-2 focus:ring-sky-400 focus:border-sky-500 
                                  bg-white text-gray-900 placeholder-gray-500 
                                  transition duration-200 ease-in-out
-                                 disabled:bg-gray-100 pr-10" // Beri ruang untuk ikon
+                                 disabled:bg-gray-100 pr-10"
                       placeholder="Masukkan password"
                       disabled={loading}
                     />

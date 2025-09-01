@@ -1,9 +1,15 @@
 // app/admin-dashboard/page.js
 "use client";
 
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // ✅ Untuk redirect
 import { FadeIn, SlideUp } from "../../components/Animations";
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { FadeIn, SlideUp } from '../../components/Animations';
+
 import {
   AreaChart,
   Area,
@@ -12,6 +18,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+<<<<<<< HEAD
 } from "recharts";
 import {
   Users,
@@ -23,6 +30,12 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
+=======
+} from 'recharts';
+import { Users, Clock, CheckCircle2, Calendar, MessageCircle, FileText, TrendingUp } from 'lucide-react';
+import { apiClient } from '../../lib/apiClient';
+import { getUserRole } from '../../lib/auth'; // Pastikan fungsi ini ada
+>>>>>>> 3f87b10 (jangan lupa pull)
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -37,6 +50,7 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [registrationData, setRegistrationData] = useState([]);
 
+<<<<<<< HEAD
   const router = useRouter(); // ✅ Untuk redirect
 
   // 🔐 Cek login dan role saat komponen dimount
@@ -86,6 +100,53 @@ export default function AdminDashboard() {
 
       // 3. Ambil semua hasil tes
       const hasilRes = await apiClient("/test/hasil");
+=======
+  const router = useRouter();
+
+  // 🔐 Cek role saat komponen dimount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    const role = getUserRole();
+    if (!role) {
+      router.push('/login');
+      return;
+    }
+
+    if (role !== 'admin') {
+      // 🔒 Akses ditolak untuk non-admin
+      alert('Akses ditolak: Halaman ini hanya untuk admin.');
+      router.push('/dashboard'); // Redirect ke dashboard user
+      return;
+    }
+
+    // ✅ Jika admin, ambil data
+    fetchData();
+
+    // Refresh data setiap 30 detik
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [router]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Ambil data dari API
+      const [pendaftarRes, jadwalRes, hasilRes] = await Promise.all([
+        apiClient('/pendaftar/all').catch(() => []), // Jika error, kembalikan array kosong
+        apiClient('/jadwal/all').catch(() => []),
+        apiClient('/test/hasil').catch(() => []),
+      ]);
+
+      const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
+      const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
+>>>>>>> 3f87b10 (jangan lupa pull)
       const hasil = Array.isArray(hasilRes) ? hasilRes : [];
 
       // Hitung statistik
@@ -98,10 +159,10 @@ export default function AdminDashboard() {
 
       setStats({ totalPendaftar: total, pending, diterima, jadwalMendatang });
 
-      // Aktivitas terbaru (digabung dari beberapa sumber)
+      // Aktivitas terbaru
       const activities = [];
 
-      // Aktivitas: Pengajuan ubah jadwal
+      // Pengajuan perubahan jadwal
       jadwal
         .filter((j) => j.pengajuan_perubahan)
         .slice(0, 3)
@@ -113,7 +174,7 @@ export default function AdminDashboard() {
           });
         });
 
-      // Aktivitas: Submit tes
+      // Submit tes
       hasil
         .sort((a, b) => new Date(b.waktu_mulai) - new Date(a.waktu_mulai))
         .slice(0, 3)
@@ -125,7 +186,7 @@ export default function AdminDashboard() {
           });
         });
 
-      // Aktivitas: Pendaftaran baru
+      // Pendaftaran baru
       pendaftar
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 3)
@@ -172,12 +233,14 @@ export default function AdminDashboard() {
 
       setRegistrationData(cumulativeData);
     } catch (err) {
-      setError(err.message);
+      console.error('Gagal muat data:', err);
+      setError(err.message || 'Gagal memuat data dashboard.');
     } finally {
       setLoading(false);
     }
   };
 
+<<<<<<< HEAD
   // Tampilkan loading saat pengecekan akses
   if (!userRole || loading) {
     return (
@@ -198,6 +261,8 @@ export default function AdminDashboard() {
     );
   }
 
+=======
+>>>>>>> 3f87b10 (jangan lupa pull)
   // Statistik utama
   const statsCards = [
     {
@@ -226,6 +291,18 @@ export default function AdminDashboard() {
     },
   ];
 
+<<<<<<< HEAD
+=======
+  // Tampilkan loading selama pengecekan
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <p className="text-lg text-gray-600">Memuat dashboard admin...</p>
+      </div>
+    );
+  }
+
+>>>>>>> 3f87b10 (jangan lupa pull)
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <main className="relative overflow-hidden py-16">
@@ -401,6 +478,7 @@ export default function AdminDashboard() {
             </SlideUp>
           </div>
 
+          {/* Error Message */}
           {error && (
             <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center">
               {error}

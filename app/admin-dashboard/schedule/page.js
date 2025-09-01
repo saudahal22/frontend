@@ -1,17 +1,18 @@
-'use client';
 // app/admin-dashboard/schedule/page.js
+'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
+import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
+import { getUserRole } from '../../../lib/auth';
 
 export default function AdminSchedulePage() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newSchedule, setNewSchedule] = useState({
-    pendaftar_id: '',
+    pendaftar_id: '', // ✅ Tambahkan
     tanggal: '',
     jam_mulai: '',
     jam_selesai: '',
@@ -19,46 +20,30 @@ export default function AdminSchedulePage() {
     catatan: '',
     jenis_jadwal: 'pribadi',
   });
-  const [userRole, setUserRole] = useState(null); // ✅ Untuk cek role
 
   const router = useRouter();
 
-  // 🔐 Cek login dan role saat komponen dimount
+  // 🔐 Cek role admin
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      // Redirect ke login jika belum login
       router.push('/login');
       return;
     }
 
-    // Ambil profil untuk cek role
-    const fetchProfile = async () => {
-      try {
-        const data = await apiClient('/profile');
-        const role = data.role || data.Role || 'user';
+    const role = getUserRole();
+    if (!role || role !== 'admin') {
+      alert('Akses ditolak: Halaman ini hanya untuk admin.');
+      router.push('/dashboard');
+      return;
+    }
 
-        if (role !== 'admin') {
-          // ❌ Bukan admin → redirect ke dashboard
-          alert('Akses ditolak: Halaman ini hanya untuk admin.');
-          router.push('/dashboard');
-          return;
-        }
-
-        setUserRole('admin');
-        fetchSchedules();
-      } catch (err) {
-        console.error('Gagal muat profil:', err);
-        setError('Gagal memverifikasi akses. Silakan login ulang.');
-        router.push('/login');
-      }
-    };
-
-    fetchProfile();
+    fetchSchedules();
   }, [router]);
 
   const fetchSchedules = async () => {
     try {
+      setLoading(true);
       const data = await apiClient('/jadwal/all');
       setSchedules(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -71,13 +56,21 @@ export default function AdminSchedulePage() {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
+      const { tanggal, jam_mulai, jam_selesai, ...rest } = newSchedule;
+
+      const formatTime = (time) => (time && time.length === 5 ? `${time}:00` : time);
+
       await apiClient('/jadwal/create', {
         method: 'POST',
         body: JSON.stringify({
-          ...newSchedule,
+          ...rest,
+          tanggal,
+          jam_mulai: formatTime(jam_mulai),
+          jam_selesai: formatTime(jam_selesai),
           pendaftar_id: newSchedule.pendaftar_id ? parseInt(newSchedule.pendaftar_id) : null,
         }),
       });
+
       alert('Jadwal berhasil dibuat!');
       setNewSchedule({
         pendaftar_id: '',
@@ -90,15 +83,29 @@ export default function AdminSchedulePage() {
       });
       fetchSchedules();
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes('1452')) {
+        setError('Gagal membuat jadwal: ID Pendaftar tidak valid.');
+      } else {
+        setError(err.message);
+      }
     }
   };
 
   const handleUpdate = async (id, updates) => {
     try {
+      const formatTime = (time) => (time && time.length === 5 ? `${time}:00` : time);
+
+      const formattedUpdates = { ...updates };
+      if (formattedUpdates.jam_mulai) {
+        formattedUpdates.jam_mulai = formatTime(formattedUpdates.jam_mulai);
+      }
+      if (formattedUpdates.jam_selesai) {
+        formattedUpdates.jam_selesai = formatTime(formattedUpdates.jam_selesai);
+      }
+
       await apiClient(`/jadwal/update?id=${id}`, {
         method: 'PUT',
-        body: JSON.stringify(updates),
+        body: JSON.stringify(formattedUpdates),
       });
       alert('Jadwal diperbarui!');
       fetchSchedules();
@@ -120,16 +127,14 @@ export default function AdminSchedulePage() {
 
   const pendingRequests = schedules.filter(s => s.pengajuan_perubahan);
 
-  // Tampilkan loading saat pengecekan
-  if (!userRole || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memeriksa akses...</p>
+        <p className="text-lg text-gray-600">Memuat jadwal...</p>
       </div>
     );
   }
 
-  // Tampilkan error jika ada
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
@@ -164,33 +169,37 @@ export default function AdminSchedulePage() {
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
               <h2 className="text-xl font-bold text-blue-900 mb-6">➕ Tambah Jadwal Baru</h2>
               <form onSubmit={handleCreate} className="space-y-4">
-                <input
-                  type="number"
-                  placeholder="ID Pendaftar (opsional)"
-                  value={newSchedule.pendaftar_id}
-                  onChange={(e) => setNewSchedule({ ...newSchedule, pendaftar_id: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
-                />
+                {/* ✅ Tambahkan input pendaftar_id */}
+                {newSchedule.jenis_jadwal === 'pribadi' && (
+                  <input
+                    type="number"
+                    placeholder="ID Pendaftar (untuk jadwal pribadi)"
+                    value={newSchedule.pendaftar_id}
+                    onChange={(e) => setNewSchedule({ ...newSchedule, pendaftar_id: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
+                  />
+                )}
+
                 <input
                   type="date"
                   required
                   value={newSchedule.tanggal}
                   onChange={(e) => setNewSchedule({ ...newSchedule, tanggal: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
                 <input
                   type="time"
                   required
                   value={newSchedule.jam_mulai}
                   onChange={(e) => setNewSchedule({ ...newSchedule, jam_mulai: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
                 <input
                   type="time"
                   required
                   value={newSchedule.jam_selesai}
                   onChange={(e) => setNewSchedule({ ...newSchedule, jam_selesai: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
                 <input
                   type="text"
@@ -198,19 +207,19 @@ export default function AdminSchedulePage() {
                   required
                   value={newSchedule.tempat}
                   onChange={(e) => setNewSchedule({ ...newSchedule, tempat: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
                 <input
                   type="text"
                   placeholder="Catatan (opsional)"
                   value={newSchedule.catatan}
                   onChange={(e) => setNewSchedule({ ...newSchedule, catatan: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 />
                 <select
                   value={newSchedule.jenis_jadwal}
                   onChange={(e) => setNewSchedule({ ...newSchedule, jenis_jadwal: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900"
                 >
                   <option value="pribadi">Pribadi</option>
                   <option value="umum">Umum</option>
@@ -228,13 +237,14 @@ export default function AdminSchedulePage() {
           {/* Daftar Jadwal */}
           <SlideUp delay={300}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-              <h2 className="text-xl font-bold text-blue-900 mb-6">🗓️ Daftar Jadwal ({schedules.length})</h2>
+              <h2 className="text-xl font-bold text-blue-900 mb-6">🗓 Daftar Jadwal ({schedules.length})</h2>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                 {schedules.map((s) => (
                   <div key={s.id_jadwal} className="p-3 bg-white/70 rounded-lg border border-sky-100">
                     <p className="font-medium text-gray-800">{s.tempat}</p>
                     <p className="text-xs text-gray-600">{s.tanggal?.split('T')[0]} | {s.jam_mulai} - {s.jam_selesai}</p>
                     <p className="text-xs text-blue-600">{s.jenis_jadwal}</p>
+                    <p className="text-xs text-gray-600">Status: {s.konfirmasi_jadwal}</p>
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleUpdate(s.id_jadwal, { konfirmasi_jadwal: 'dikonfirmasi' })}

@@ -2,9 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
+import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
+import { getUserRole } from '../../../lib/auth'; // ✅ Gunakan langsung
 
 export default function AdminMaterialPage() {
   const [soal, setSoal] = useState([]);
@@ -20,46 +21,36 @@ export default function AdminMaterialPage() {
     jawaban_benar: '',
   });
   const [editId, setEditId] = useState(null);
-  const [userRole, setUserRole] = useState(null); // ✅ Untuk cek role
 
   const router = useRouter();
 
-  // 🔐 Cek login dan role saat komponen dimount
+  // 🔐 Cek role langsung tanpa API call
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      // Redirect ke login jika belum login
       router.push('/login');
       return;
     }
 
-    // Ambil profil untuk cek role
-    const fetchProfile = async () => {
-      try {
-        const data = await apiClient('/profile');
-        const role = data.role || data.Role || 'user';
+    const role = getUserRole();
+    if (!role) {
+      router.push('/login');
+      return;
+    }
 
-        if (role !== 'admin') {
-          // ❌ Bukan admin → redirect ke dashboard
-          alert('Akses ditolak: Halaman ini hanya untuk admin.');
-          router.push('/dashboard');
-          return;
-        }
+    if (role !== 'admin') {
+      alert('Akses ditolak: Halaman ini hanya untuk admin.');
+      router.push('/dashboard');
+      return;
+    }
 
-        setUserRole('admin');
-        fetchSoal();
-      } catch (err) {
-        console.error('Gagal muat profil:', err);
-        setError('Gagal memverifikasi akses. Silakan login ulang.');
-        router.push('/login');
-      }
-    };
-
-    fetchProfile();
+    // ✅ Jika admin, ambil data
+    fetchSoal();
   }, [router]);
 
   const fetchSoal = async () => {
     try {
+      setLoading(true);
       const data = await apiClient('/test/soal');
       setSoal(Array.isArray(data.soal) ? data.soal : []);
     } catch (err) {
@@ -128,11 +119,11 @@ export default function AdminMaterialPage() {
     }
   };
 
-  // Tampilkan loading saat pengecekan
-  if (!userRole || loading) {
+  // Tampilkan loading saat ambil data
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memeriksa akses...</p>
+        <p className="text-lg text-gray-600">Memuat soal...</p>
       </div>
     );
   }
@@ -167,7 +158,7 @@ export default function AdminMaterialPage() {
           <SlideUp delay={200}>
             <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-6 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
               <h2 className="text-xl font-bold text-blue-900 mb-6">
-                {editId ? '✏️ Edit Soal' : '➕ Tambah Soal'}
+                {editId ? '✏ Edit Soal' : '➕ Tambah Soal'}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input

@@ -2,54 +2,45 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
+import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
+import { getUserRole } from '../../../lib/auth'; // ✅ Gunakan langsung
 
 export default function AdminHasilPage() {
   const [hasil, setHasil] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [userRole, setUserRole] = useState(null);
 
   const router = useRouter();
 
-  // 🔐 Cek login dan role saat komponen dimount
+  // 🔐 Cek role langsung tanpa API call
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      // Redirect ke login jika belum login
       router.push('/login');
       return;
     }
 
-    // Ambil profil untuk cek role
-    const fetchProfile = async () => {
-      try {
-        const data = await apiClient('/profile');
-        const role = data.role || data.Role || 'user';
+    const role = getUserRole();
+    if (!role) {
+      router.push('/login');
+      return;
+    }
 
-        if (role !== 'admin') {
-          // Redirect ke dashboard jika bukan admin
-          alert('Akses ditolak: Halaman ini hanya untuk admin.');
-          router.push('/dashboard');
-          return;
-        }
+    if (role !== 'admin') {
+      alert('Akses ditolak: Halaman ini hanya untuk admin.');
+      router.push('/dashboard');
+      return;
+    }
 
-        setUserRole('admin');
-        fetchHasil();
-      } catch (err) {
-        console.error('Gagal muat profil:', err);
-        setError('Gagal memverifikasi akses. Silakan login ulang.');
-        router.push('/login');
-      }
-    };
-
-    fetchProfile();
+    // ✅ Jika admin, ambil data
+    fetchHasil();
   }, [router]);
 
   const fetchHasil = async () => {
     try {
+      setLoading(true);
       const data = await apiClient('/test/hasil');
       setHasil(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -59,11 +50,11 @@ export default function AdminHasilPage() {
     }
   };
 
-  // Tampilkan loading saat pengecekan
-  if (!userRole || loading) {
+  // Tampilkan loading saat ambil data
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memeriksa akses...</p>
+        <p className="text-lg text-gray-600">Memuat hasil tes...</p>
       </div>
     );
   }

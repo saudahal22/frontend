@@ -2,9 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Untuk redirect
+import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
+import { getUserRole } from '../../../lib/auth'; // Gunakan langsung
 
 export default function AdminStatusPage() {
   const [members, setMembers] = useState([]);
@@ -14,46 +15,36 @@ export default function AdminStatusPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
   const [submitStatus, setSubmitStatus] = useState('');
-  const [userRole, setUserRole] = useState(null); // ✅ Untuk cek role
 
   const router = useRouter();
 
-  // 🔐 Cek login dan role saat komponen dimount
+  // 🔐 Cek role langsung, tanpa API call
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      // Redirect ke login jika belum login
       router.push('/login');
       return;
     }
 
-    // Ambil profil untuk cek role
-    const fetchProfile = async () => {
-      try {
-        const data = await apiClient('/profile');
-        const role = data.role || data.Role || 'user';
+    const role = getUserRole();
+    if (!role) {
+      router.push('/login');
+      return;
+    }
 
-        if (role !== 'admin') {
-          // ❌ Bukan admin → redirect ke dashboard
-          alert('Akses ditolak: Halaman ini hanya untuk admin.');
-          router.push('/dashboard');
-          return;
-        }
+    if (role !== 'admin') {
+      alert('Akses ditolak: Halaman ini hanya untuk admin.');
+      router.push('/dashboard');
+      return;
+    }
 
-        setUserRole('admin');
-        fetchMembers();
-      } catch (err) {
-        console.error('Gagal muat profil:', err);
-        setError('Gagal memverifikasi akses. Silakan login ulang.');
-        router.push('/login');
-      }
-    };
-
-    fetchProfile();
+    // ✅ Jika admin, ambil data
+    fetchMembers();
   }, [router]);
 
   const fetchMembers = async () => {
     try {
+      setLoading(true);
       const data = await apiClient('/pendaftar/all');
       setMembers(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -65,13 +56,16 @@ export default function AdminStatusPage() {
 
   const handleUpdateStatus = async (id, status) => {
     try {
+      const formData = new FormData();
+      formData.append('id_pendaftar', id);
+      formData.append('status', status);
+
       await apiClient('/pendaftar/update', {
         method: 'PUT',
-        body: JSON.stringify({
-          id_pendaftar: id,
-          status: status,
-        }),
+        body: formData,
+        // ❌ Jangan set Content-Type — biarkan browser atur otomatis
       });
+
       setSubmitStatus(`Status pendaftar ID ${id} diperbarui menjadi ${status}`);
       fetchMembers();
       setTimeout(() => setSubmitStatus(''), 5000);
@@ -102,18 +96,19 @@ export default function AdminStatusPage() {
 
   // Filter data
   const filteredMembers = members.filter((m) => {
-    const matchesSearch = m.nama_lengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         m.asal_kampus.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         m.prodi.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      m.nama_lengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.asal_kampus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.prodi.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus ? m.status === filterStatus : true;
     return matchesSearch && matchesStatus;
   });
 
   // Tampilkan loading saat pengecekan
-  if (!userRole || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memeriksa akses...</p>
+        <p className="text-lg text-gray-600">Memuat data...</p>
       </div>
     );
   }

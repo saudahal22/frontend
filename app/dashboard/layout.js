@@ -9,7 +9,10 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!pathname.startsWith('/dashboard')) return children;
+  // ✅ Hanya render layout jika di /dashboard/*
+  if (!pathname.startsWith('/dashboard')) {
+    return children;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
