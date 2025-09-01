@@ -1,15 +1,11 @@
 // app/admin-dashboard/page.js
 "use client";
 
-
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // ✅ Untuk redirect
+import { useRouter } from "next/navigation";
 import { FadeIn, SlideUp } from "../../components/Animations";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { FadeIn, SlideUp } from '../../components/Animations';
-
+// ✅ Recharts
 import {
   AreaChart,
   Area,
@@ -18,8 +14,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-<<<<<<< HEAD
 } from "recharts";
+
+// ✅ Lucide Icons
 import {
   Users,
   Clock,
@@ -29,18 +26,15 @@ import {
   FileText,
   TrendingUp,
 } from "lucide-react";
+
+// ✅ API & Auth
 import { apiClient } from "../../lib/apiClient";
-=======
-} from 'recharts';
-import { Users, Clock, CheckCircle2, Calendar, MessageCircle, FileText, TrendingUp } from 'lucide-react';
-import { apiClient } from '../../lib/apiClient';
-import { getUserRole } from '../../lib/auth'; // Pastikan fungsi ini ada
->>>>>>> 3f87b10 (jangan lupa pull)
+import { getUserRole } from "../../lib/auth";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [userRole, setUserRole] = useState(null); // ✅ Cek role
+  const [userRole, setUserRole] = useState(null);
   const [stats, setStats] = useState({
     totalPendaftar: 0,
     pending: 0,
@@ -50,103 +44,49 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [registrationData, setRegistrationData] = useState([]);
 
-<<<<<<< HEAD
-  const router = useRouter(); // ✅ Untuk redirect
+  const router = useRouter();
 
-  // 🔐 Cek login dan role saat komponen dimount
+  // 🔐 Cek role saat mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      // Redirect ke login jika belum login
       router.push("/login");
-      return;
-    }
-
-    // Ambil profil untuk cek role
-    const fetchProfile = async () => {
-      try {
-        const data = await apiClient("/profile");
-        const role = (data.role || data.Role || "").toLowerCase(); // ✅ lowercase untuk hindari bug
-
-        if (role !== "admin") {
-          // ❌ Bukan admin → redirect ke dashboard user
-          alert("Akses ditolak: Halaman ini hanya untuk admin.");
-          router.push("/dashboard");
-          return;
-        }
-
-        setUserRole("admin");
-        fetchData(); // ✅ Lanjutkan muat data setelah otorisasi berhasil
-      } catch (err) {
-        console.error("Gagal muat profil:", err);
-        setError("Gagal memverifikasi akses. Silakan login ulang.");
-        router.push("/login");
-      }
-    };
-
-    fetchProfile();
-  }, [router]);
-
-  // Ambil data dari backend
-  const fetchData = async () => {
-    try {
-      // 1. Ambil semua pendaftar
-      const pendaftarRes = await apiClient("/pendaftar/all");
-      const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
-
-      // 2. Ambil semua jadwal
-      const jadwalRes = await apiClient("/jadwal/all");
-      const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
-
-      // 3. Ambil semua hasil tes
-      const hasilRes = await apiClient("/test/hasil");
-=======
-  const router = useRouter();
-
-  // 🔐 Cek role saat komponen dimount
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
       return;
     }
 
     const role = getUserRole();
     if (!role) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
-    if (role !== 'admin') {
-      // 🔒 Akses ditolak untuk non-admin
-      alert('Akses ditolak: Halaman ini hanya untuk admin.');
-      router.push('/dashboard'); // Redirect ke dashboard user
+    if (role !== "admin") {
+      alert("Akses ditolak: Halaman ini hanya untuk admin.");
+      router.push("/dashboard");
       return;
     }
 
-    // ✅ Jika admin, ambil data
+    setUserRole("admin");
     fetchData();
 
-    // Refresh data setiap 30 detik
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [router]);
 
+  // Ambil data dari API
   const fetchData = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      // Ambil data dari API
       const [pendaftarRes, jadwalRes, hasilRes] = await Promise.all([
-        apiClient('/pendaftar/all').catch(() => []), // Jika error, kembalikan array kosong
-        apiClient('/jadwal/all').catch(() => []),
-        apiClient('/test/hasil').catch(() => []),
+        apiClient("/pendaftar/all").catch(() => []),
+        apiClient("/jadwal/all").catch(() => []),
+        apiClient("/test/hasil").catch(() => []),
       ]);
 
       const pendaftar = Array.isArray(pendaftarRes) ? pendaftarRes : [];
       const jadwal = Array.isArray(jadwalRes) ? jadwalRes : [];
->>>>>>> 3f87b10 (jangan lupa pull)
       const hasil = Array.isArray(hasilRes) ? hasilRes : [];
 
       // Hitung statistik
@@ -198,7 +138,6 @@ export default function AdminDashboard() {
           });
         });
 
-      // Urutkan terbaru dulu
       setRecentActivities(activities.slice(0, 6));
 
       // Data grafik: pertumbuhan pendaftar per hari
@@ -233,15 +172,14 @@ export default function AdminDashboard() {
 
       setRegistrationData(cumulativeData);
     } catch (err) {
-      console.error('Gagal muat data:', err);
-      setError(err.message || 'Gagal memuat data dashboard.');
+      console.error("Gagal muat data:", err);
+      setError(err.message || "Gagal memuat data dashboard.");
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-  // Tampilkan loading saat pengecekan akses
+  // Tampilkan loading saat pengecekan
   if (!userRole || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -250,7 +188,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // Tampilkan error jika ada
+  // Tampilkan error
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
@@ -261,8 +199,6 @@ export default function AdminDashboard() {
     );
   }
 
-=======
->>>>>>> 3f87b10 (jangan lupa pull)
   // Statistik utama
   const statsCards = [
     {
@@ -291,18 +227,6 @@ export default function AdminDashboard() {
     },
   ];
 
-<<<<<<< HEAD
-=======
-  // Tampilkan loading selama pengecekan
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memuat dashboard admin...</p>
-      </div>
-    );
-  }
-
->>>>>>> 3f87b10 (jangan lupa pull)
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <main className="relative overflow-hidden py-16">
