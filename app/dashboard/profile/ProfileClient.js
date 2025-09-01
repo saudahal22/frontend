@@ -3,10 +3,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { FadeIn, SlideUp } from "../../../components/Animations";
 import { apiClient } from "../../../lib/apiClient";
-import { getUserRole } from "../../../lib/auth"; // ✅ Impor untuk cek role
+import { getUserRole } from "../../../lib/auth";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
@@ -19,7 +18,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://cocopen-production.up.railway.app";
 
-  // 🔐 Cek role saat komponen dimount
+  // 🔐 Cek role
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -34,19 +33,14 @@ export default function ProfilePage() {
     }
 
     if (role !== 'user') {
-      // ❌ Bukan user → redirect ke admin-dashboard
-      alert('Akses ditolak: Halaman ini hanya untuk user.');
+      alert('Akses ditolak: Halaman ini hanya untuk pengguna.');
       router.push('/admin-dashboard');
       return;
     }
 
-    // ✅ Jika user, ambil data profil
     fetchProfile();
 
-    const handleStorageChange = () => {
-      fetchProfile();
-    };
-
+    const handleStorageChange = () => fetchProfile();
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [router]);
@@ -66,11 +60,6 @@ export default function ProfilePage() {
             ? `${API_URL}/uploads/pendaftar/${data.foto}`
             : "/default-avatar.png",
         tanggalBergabung: data.tanggal_bergabung || data.TanggalBergabung || "-",
-        asalKampus: data.asal_kampus || "-",
-        prodi: data.prodi || "-",
-        noWa: data.no_wa || "-",
-        alasanMasuk: data.alasan_masuk || "-",
-        pengetahuanCoconut: data.pengetahuan_coconut || "-",
       });
     } catch (err) {
       console.error("Gagal muat profil:", err);
@@ -82,11 +71,6 @@ export default function ProfilePage() {
         statusKeanggotaan: "Gagal Muat",
         profilePicture: "/default-avatar.png",
         tanggalBergabung: "-",
-        asalKampus: "-",
-        prodi: "-",
-        noWa: "-",
-        alasanMasuk: "-",
-        pengetahuanCoconut: "-",
       });
     } finally {
       setLoading(false);
@@ -161,81 +145,73 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Memuat profil...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-lg text-slate-600">Memuat profil...</p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <p className="text-red-500">Gagal memuat profil.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
-      <main className="relative overflow-hidden py-24">
-        <div className="container mx-auto px-6 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+      <main className="py-12 px-4">
+        <div className="max-w-md mx-auto">
           <FadeIn>
-            <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-blue-800 via-sky-600 to-blue-900 bg-clip-text text-transparent leading-tight tracking-tight">
+            <h1 className="text-3xl font-bold text-center text-slate-800 mb-4">
               Profil Saya
             </h1>
-            <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-16">
-              Kelola informasi pribadi Anda di sini.
+            <p className="text-center text-slate-600 mb-8">
+              Kelola foto dan nama Anda di sini.
             </p>
           </FadeIn>
 
           <SlideUp delay={200}>
-            <div className="bg-gradient-to-br from-white/90 to-sky-50/90 p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
-              <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
-                <div
-                  className="relative cursor-pointer group"
-                  onClick={handleProfileClick}
+            <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 text-center">
+              {/* Foto Profil */}
+              <div
+                className="relative inline-block cursor-pointer mx-auto mb-6 group"
+                onClick={handleProfileClick}
+              >
+                <img
+                  src={profile.profilePicture}
+                  alt="Foto Profil"
+                  width={120}
+                  height={120}
+                  className="rounded-full border-4 border-slate-200 w-32 h-32 object-cover transition-transform duration-300 group-hover:scale-105 shadow-md"
+                />
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                  <span className="text-white text-sm font-medium">
+                    Edit Profil
+                  </span>
+                </div>
+              </div>
+
+              {/* Nama & Info */}
+              <h2 className="text-2xl font-bold text-slate-800 mb-1">
+                {profile.fullName}
+              </h2>
+              <p className="text-slate-600 text-sm mb-2 truncate">{profile.email}</p>
+
+              <div className="flex justify-center gap-4 text-sm mb-4">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full font-medium text-xs ${
+                    profile.statusKeanggotaan === "Aktif"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-slate-100 text-slate-800"
+                  }`}
                 >
-                  <img
-                    src={profile.profilePicture}
-                    alt="Profil"
-                    width={120}
-                    height={120}
-                    className="rounded-full border-4 border-sky-200 w-32 h-32 object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <span className="text-white text-xs font-medium">
-                      Edit Profil
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-center md:text-left flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    {profile.fullName}
-                  </h2>
-                  <p className="text-gray-600">{profile.email}</p>
-                  <p className="text-sm text-blue-600 font-medium">
-                    {profile.statusKeanggotaan}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Bergabung: {profile.tanggalBergabung}
-                  </p>
-
-                  <div className="mt-4 text-sm text-gray-600 space-y-1">
-                    {profile.asalKampus !== "-" && (
-                      <p>Asal Kampus: <span className="font-medium">{profile.asalKampus}</span></p>
-                    )}
-                    {profile.prodi !== "-" && (
-                      <p>Program Studi: <span className="font-medium">{profile.prodi}</span></p>
-                    )}
-                    {profile.noWa !== "-" && (
-                      <p>No WA: <span className="font-medium">{profile.noWa}</span></p>
-                    )}
-                    {profile.alasanMasuk !== "-" && (
-                      <p>Alasan: <span className="italic">{profile.alasanMasuk}</span></p>
-                    )}
-                  </div>
-                </div>
+                  {profile.statusKeanggotaan}
+                </span>
+                <span className="text-slate-500">
+                  Bergabung: {profile.tanggalBergabung}
+                </span>
               </div>
             </div>
           </SlideUp>
@@ -244,26 +220,24 @@ export default function ProfilePage() {
 
       {/* Modal Edit Profil */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Profil</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <h3 className="text-xl font-bold text-slate-800 mb-5 text-center">Edit Profil</h3>
 
-            <div className="mb-4">
-              <label className="block text-left text-sm font-medium text-gray-700 mb-1">
+            <div className="mb-5">
+              <label className="block text-left text-sm font-medium text-slate-700 mb-2">
                 Nama Lengkap
               </label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 placeholder="Masukkan nama lengkap"
               />
             </div>
 
-            <p className="text-sm text-gray-600 mb-4">Atau ganti foto profil:</p>
-
-            {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+            {error && <p className="text-red-500 text-xs mb-4 text-center">{error}</p>}
 
             <input
               type="file"
@@ -275,7 +249,7 @@ export default function ProfilePage() {
             />
             <label
               htmlFor="photo-upload"
-              className="block w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg font-medium cursor-pointer transition mb-3"
+              className="block w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 rounded-lg font-semibold transition mb-3 cursor-pointer"
             >
               {uploading ? "Mengunggah..." : "Pilih Foto"}
             </label>
@@ -283,27 +257,13 @@ export default function ProfilePage() {
             <button
               onClick={closeModal}
               disabled={uploading}
-              className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+              className="w-full border border-slate-300 text-slate-700 py-3 rounded-lg hover:bg-slate-50 transition font-medium"
             >
               Batal
             </button>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -20,7 +20,6 @@ const geistMono = Geist_Mono({
 const NO_NAVBAR_PAGES = [
   '/login',
   '/registrasi',
-  '/register',
   '/forgot-password',
   '/reset-password',
   

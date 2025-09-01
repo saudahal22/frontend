@@ -11,7 +11,7 @@ export default function MaterialClient() {
   const [error, setError] = useState('');
   const [soal, setSoal] = useState([]);
   const [jawaban, setJawaban] = useState({});
-  const [durasi, setDurasi] = useState(60); // Default fallback
+  const [durasi, setDurasi] = useState(60);
   const [judul, setJudul] = useState('Tes Seleksi');
   const [deskripsi, setDeskripsi] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
@@ -19,10 +19,8 @@ export default function MaterialClient() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const router = useRouter();
 
-  // 🔐 Cek role dan ambil data
+  // 🔐 Cek role
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
@@ -31,7 +29,7 @@ export default function MaterialClient() {
 
     const role = getUserRole();
     if (role !== 'user') {
-      alert('Akses ditolak: halaman ini hanya untuk user.');
+      alert('Akses ditolak: halaman ini hanya untuk peserta.');
       router.push(role === 'admin' ? '/admin-dashboard' : '/');
       return;
     }
@@ -44,13 +42,12 @@ export default function MaterialClient() {
       setError('');
       const data = await apiClient('/test/soal');
 
-      // Simpan info tes
       setJudul(data.judul || 'Tes Seleksi');
       setDeskripsi(data.deskripsi || '');
       setDurasi(data.durasi_menit || 60);
       setTimeLeft((data.durasi_menit || 60) * 60);
 
-      // Cek waktu aktif tes
+      // Validasi waktu tes
       if (data.waktu_mulai && data.waktu_selesai) {
         const now = new Date();
         const mulai = new Date(data.waktu_mulai);
@@ -58,7 +55,7 @@ export default function MaterialClient() {
 
         if (now < mulai) {
           setError(
-            `⏳ Tes belum dimulai. Akan dibuka pada: ${mulai.toLocaleString('id-ID', {
+            `Tes belum dimulai. Akan dibuka pada: ${mulai.toLocaleString('id-ID', {
               dateStyle: 'full',
               timeStyle: 'short',
             })}`
@@ -70,7 +67,7 @@ export default function MaterialClient() {
 
         if (now > selesai) {
           setError(
-            `🔒 Tes telah ditutup. Dibuka dari ${mulai.toLocaleString('id-ID', {
+            `Tes telah ditutup. Dibuka dari ${mulai.toLocaleString('id-ID', {
               dateStyle: 'medium',
               timeStyle: 'short',
             })} hingga ${selesai.toLocaleString('id-ID', {
@@ -84,38 +81,29 @@ export default function MaterialClient() {
         }
       }
 
-      // Jika lolos pengecekan waktu, tampilkan soal
       if (Array.isArray(data.soal)) {
         setSoal(data.soal);
       } else {
         throw new Error('Data soal tidak valid');
       }
     } catch (err) {
-      // Cek apakah error karena user sudah pernah tes
       if (err.message.includes('sudah pernah mengikuti tes')) {
-        setError('✅ Anda sudah pernah mengikuti tes. Hasil sudah tersedia di halaman hasil.');
-        setTimeout(() => {
-          router.push('/dashboard/hasil');
-        }, 2000);
+        setError('Anda sudah pernah mengikuti tes. Mengalihkan ke hasil...');
+        setTimeout(() => router.push('/dashboard/hasil'), 1500);
         return;
       }
-
-      // Cek jika tes belum tersedia
       if (err.message.includes('Tes belum tersedia')) {
-        setError('📋 Tes belum dikonfigurasi oleh admin.');
+        setError('Tes belum dikonfigurasi oleh admin.');
         setSoal([]);
-        setLoading(false);
-        return;
+      } else {
+        setError('Gagal memuat soal: ' + (err.message || ''));
       }
-
-      // Error umum
-      setError('❌ Gagal memuat soal: ' + (err.message || 'Terjadi kesalahan'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Timer: hanya aktif jika soal dimuat dan belum submit
+  // Timer
   useEffect(() => {
     if (!timeLeft || isSubmitted || soal.length === 0 || error) return;
 
@@ -136,7 +124,7 @@ export default function MaterialClient() {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleJawab = (idSoal, jawab) => {
@@ -153,9 +141,7 @@ export default function MaterialClient() {
         body: JSON.stringify({ jawaban }),
       });
 
-      alert(
-        `🎉 Tes selesai!\nSkor: ${res.skor_benar}/${soal.length}\nNilai: ${res.nilai.toFixed(2)}`
-      );
+      alert(`Tes selesai!\nSkor: ${res.skor_benar}/${soal.length}\nNilai: ${res.nilai.toFixed(2)}`);
       router.push('/dashboard/hasil');
     } catch (err) {
       setError('Gagal submit jawaban: ' + (err.message || ''));
@@ -176,110 +162,157 @@ export default function MaterialClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memuat soal...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-lg text-slate-600">Memuat soal...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
+      <div className="max-w-5xl mx-auto px-4 py-8">
         <FadeIn>
           {/* Header */}
-          <div className="bg-white rounded-3xl shadow-xl p-8 mb-6">
-            <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">{judul}</h1>
-            {deskripsi && <p className="text-gray-600 text-center mb-4">{deskripsi}</p>}
-            <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600 gap-2">
-              <span>Total soal: {soal.length}</span>
-              <span className="font-mono bg-red-100 text-red-800 px-3 py-1 rounded-full">
-                ⏰ {formatTime(timeLeft)}
-              </span>
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center border border-slate-200">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">{judul}</h1>
+            {deskripsi && <p className="text-slate-600 mb-4 text-sm md:text-base">{deskripsi}</p>}
+
+            {/* Timer Besar */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span>Soal:</span>
+                <span className="font-medium">{soal.length} butir</span>
+              </div>
+
+              <div
+                className={`text-lg font-mono font-bold px-6 py-2 rounded-full text-white shadow-md ${
+                  timeLeft <= 60
+                    ? 'bg-red-600 animate-pulse'
+                    : timeLeft <= 300
+                    ? 'bg-orange-500'
+                    : 'bg-blue-600'
+                }`}
+              >
+                ⏳ {formatTime(timeLeft)}
+              </div>
             </div>
           </div>
 
-          {/* Navigasi Soal */}
-          <div className="flex justify-center mb-4">
-            {soal.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentQuestion(index)}
-                className={`w-10 h-10 mx-1 rounded-full text-sm font-bold transition ${
-                  currentQuestion === index
-                    ? 'bg-blue-600 text-white'
-                    : jawaban[soal[index]?.id_soal]
-                    ? 'bg-green-200 text-green-800'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-center text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Navigasi Soal (Indikator) */}
+          {!error && soal.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mb-6 px-2">
+              {soal.map((s, index) => {
+                const sudahJawab = jawaban[s.id_soal];
+                return (
+                  <button
+                    key={s.id_soal}
+                    onClick={() => setCurrentQuestion(index)}
+                    className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                      currentQuestion === index
+                        ? 'bg-blue-600 text-white shadow-md scale-105'
+                        : sudahJawab
+                        ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Form Soal */}
-          <SlideUp delay={200}>
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-              {soal.map((s, index) => (
-                <div
-                  key={s.id_soal}
-                  className={`bg-white p-6 rounded-2xl shadow mb-6 transition-opacity duration-300 ${
-                    index === currentQuestion ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'
-                  }`}
-                  style={{ display: index === currentQuestion ? 'block' : 'none' }}
-                >
-                  <h3 className="font-bold text-gray-800 mb-4">
-                    {index + 1}. {s.pertanyaan}
-                  </h3>
-                  <div className="space-y-2">
-                    {['A', 'B', 'C', 'D'].map((opt) => (
-                      <label key={opt} className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`soal-${s.id_soal}`}
-                          value={opt}
-                          checked={jawaban[s.id_soal] === opt}
-                          onChange={() => handleJawab(s.id_soal, opt)}
-                          className="text-blue-600"
-                        />
-                        <span>{opt}. {s[`pilihan_${opt.toLowerCase()}`]}</span>
-                      </label>
-                    ))}
+          {!error && soal.length > 0 && (
+            <SlideUp delay={200}>
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                {soal.map((s, index) => (
+                  <div
+                    key={s.id_soal}
+                    className={`bg-white p-6 rounded-xl shadow border border-slate-200 transition-all duration-300 ${
+                      index === currentQuestion
+                        ? 'opacity-100 scale-100 translate-y-0'
+                        : 'opacity-0 h-0 overflow-hidden absolute inset-x-0 -z-10'
+                    }`}
+                    style={{ display: index === currentQuestion ? 'block' : 'none' }}
+                  >
+                    <h3 className="text-lg font-semibold text-slate-800 mb-5">
+                      {index + 1}. {s.pertanyaan}
+                    </h3>
+                    <div className="space-y-3">
+                      {['A', 'B', 'C', 'D'].map((opt) => (
+                        <label
+                          key={opt}
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            jawaban[s.id_soal] === opt
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`soal-${s.id_soal}`}
+                            value={opt}
+                            checked={jawaban[s.id_soal] === opt}
+                            onChange={() => handleJawab(s.id_soal, opt)}
+                            className="sr-only"
+                          />
+                          <span
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                              jawaban[s.id_soal] === opt
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-slate-400'
+                            }`}
+                          >
+                            {opt}
+                          </span>
+                          <span className="text-slate-800">{s[`pilihan_${opt.toLowerCase()}`]}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8">
-                <button
-                  type="button"
-                  onClick={goToPrev}
-                  disabled={currentQuestion === 0}
-                  className="bg-gray-400 disabled:bg-gray-200 text-white px-6 py-2 rounded-full"
-                >
-                  ← Sebelumnya
-                </button>
-                {currentQuestion < soal.length - 1 ? (
+                {/* Navigation Buttons */}
+                <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8">
                   <button
                     type="button"
-                    onClick={goToNext}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full"
+                    onClick={goToPrev}
+                    disabled={currentQuestion === 0}
+                    className="px-6 py-3 bg-slate-400 disabled:bg-slate-200 text-white rounded-lg font-medium transition hover:bg-slate-500 disabled:cursor-not-allowed"
                   >
-                    Selanjutnya →
+                    ← Sebelumnya
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSubmitted}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 disabled:from-gray-400 disabled:to-gray-400 text-white px-8 py-3 rounded-full font-semibold"
-                  >
-                    {isSubmitted ? 'Sedang Submit...' : 'Submit Jawaban'}
-                  </button>
-                )}
-              </div>
-            </form>
-          </SlideUp>
+
+                  {currentQuestion < soal.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={goToNext}
+                      className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+                    >
+                      Selanjutnya →
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={isSubmitted}
+                      className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg font-semibold transition disabled:cursor-not-allowed"
+                    >
+                      {isSubmitted ? 'Mengirim...' : 'Selesai & Submit'}
+                    </button>
+                  )}
+                </div>
+              </form>
+            </SlideUp>
+          )}
         </FadeIn>
       </div>
     </div>

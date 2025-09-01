@@ -47,6 +47,7 @@ export default function AdminHasilPage() {
       setLoading(false);
     }
   };
+  
 
   if (loading) {
     return (

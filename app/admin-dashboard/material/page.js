@@ -58,7 +58,7 @@ export default function AdminMaterialPage() {
         aktif: data.aktif ?? true,
       });
     } catch (err) {
-      console.warn("Konfigurasi tes belum tersedia, mungkin belum diatur.");
+      console.warn("Konfigurasi tes belum tersedia.");
     }
   };
 
@@ -82,9 +82,9 @@ export default function AdminMaterialPage() {
         body: JSON.stringify(payload),
       });
 
-      alert("Konfigurasi tes berhasil disimpan!");
+      alert("Konfigurasi berhasil disimpan!");
     } catch (err) {
-      setError("Gagal simpan konfigurasi: " + (err.message || ""));
+      setError("Gagal menyimpan: " + (err.message || ""));
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function AdminMaterialPage() {
     fetchTestConfig();
   }, [router]);
 
-  // ✅ Tambah/Edit Soal (tetap sama)
+  // ✅ Tambah/Edit Soal
   const handleSubmitSoal = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -157,43 +157,43 @@ export default function AdminMaterialPage() {
     try {
       await apiClient(`/test/soal/delete?id=${id}`, { method: "DELETE" });
       await fetchSoal();
-      alert("Soal dihapus");
+      alert("Soal dihapus.");
     } catch (err) {
-      setError(err.message || "Gagal menghapus");
+      setError(err.message || "Gagal menghapus soal.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-16 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <FadeIn>
-          <h1 className="text-3xl font-bold text-center text-blue-900 mb-2">
-            🛠 Admin Panel: Soal & Waktu Tes
+          <h1 className="text-4xl font-extrabold text-center text-slate-800 mb-4">
+            Admin Panel
           </h1>
-          <p className="text-center text-gray-700 mb-12">
-            Kelola soal dan jadwal tes seleksi.
+          <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
+            Kelola soal ujian dan pengaturan waktu tes seleksi secara efisien.
           </p>
         </FadeIn>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg text-center border border-red-200">
-            {error}
+          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-center border border-red-100">
+            <span className="font-medium">Error:</span> {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Soal */}
           <SlideUp delay={200}>
-            <div className="bg-white/90 p-6 rounded-3xl shadow-xl border border-gray-200 backdrop-blur-sm">
-              <h2 className="text-xl font-bold text-blue-900 mb-6">
-                {editId ? "✏ Edit Soal" : "➕ Tambah Soal"}
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+                {editId ? "Edit Soal" : "Tambah Soal Baru"}
               </h2>
               <form onSubmit={handleSubmitSoal} className="space-y-4">
                 <input
                   type="number"
-                  name="nomor"
+                  placeholder="Nomor"
                   value={newSoal.nomor}
                   onChange={(e) =>
                     setNewSoal({
@@ -201,26 +201,24 @@ export default function AdminMaterialPage() {
                       nomor: parseInt(e.target.value) || "",
                     })
                   }
-                  placeholder="Nomor"
                   required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-800 placeholder-gray-500"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 placeholder-slate-500"
                 />
                 <input
                   type="text"
-                  name="pertanyaan"
+                  placeholder="Pertanyaan"
                   value={newSoal.pertanyaan}
                   onChange={(e) =>
                     setNewSoal({ ...newSoal, pertanyaan: e.target.value })
                   }
-                  placeholder="Pertanyaan"
                   required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-800 placeholder-gray-500"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 placeholder-slate-500"
                 />
                 {["a", "b", "c", "d"].map((opt) => (
                   <input
                     key={opt}
                     type="text"
-                    name={`pilihan_${opt}`}
+                    placeholder={`Pilihan ${opt.toUpperCase()}`}
                     value={newSoal[`pilihan_${opt}`]}
                     onChange={(e) =>
                       setNewSoal({
@@ -228,19 +226,17 @@ export default function AdminMaterialPage() {
                         [`pilihan_${opt}`]: e.target.value,
                       })
                     }
-                    placeholder={`Pilihan ${opt.toUpperCase()}`}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-800 placeholder-gray-500"
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 placeholder-slate-500"
                   />
                 ))}
                 <select
-                  name="jawaban_benar"
                   value={newSoal.jawaban_benar}
                   onChange={(e) =>
                     setNewSoal({ ...newSoal, jawaban_benar: e.target.value })
                   }
                   required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-800"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 >
                   <option value="">Jawaban Benar</option>
                   <option value="A">A</option>
@@ -248,11 +244,12 @@ export default function AdminMaterialPage() {
                   <option value="C">C</option>
                   <option value="D">D</option>
                 </select>
-                <div className="flex gap-3">
+
+                <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-3 rounded-full font-semibold transition"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 rounded-lg font-medium transition"
                   >
                     {loading ? "Menyimpan..." : editId ? "Perbarui" : "Tambah"}
                   </button>
@@ -271,7 +268,7 @@ export default function AdminMaterialPage() {
                           jawaban_benar: "",
                         });
                       }}
-                      className="bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-full transition"
+                      className="bg-slate-400 hover:bg-slate-500 text-white py-3 px-4 rounded-lg transition"
                     >
                       Batal
                     </button>
@@ -283,48 +280,49 @@ export default function AdminMaterialPage() {
 
           {/* Daftar Soal */}
           <SlideUp delay={300}>
-            <div className="bg-white/90 p-6 rounded-3xl shadow-xl border border-gray-200 backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 h-full">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-blue-900">
-                  📋 Soal ({soal.length})
+                <h2 className="text-2xl font-semibold text-slate-800">
+                  Daftar Soal
                 </h2>
                 <button
                   onClick={fetchSoal}
                   disabled={loading}
-                  className="text-sm bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-800 px-3 py-1 rounded transition"
+                  className="text-sm bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 text-slate-700 px-3 py-1 rounded transition"
                 >
-                  🔁
+                  Muat Ulang
                 </button>
               </div>
+
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {soal.length === 0 ? (
-                  <p className="text-gray-600 text-center italic">
+                  <p className="text-slate-500 text-center py-4 italic">
                     Belum ada soal.
                   </p>
                 ) : (
                   soal.map((s) => (
                     <div
                       key={s.id_soal}
-                      className="p-4 bg-white/70 rounded border border-sky-100 hover:shadow hover:bg-gray-50 transition cursor-default"
+                      className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:shadow transition"
                     >
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-medium text-slate-800 line-clamp-2">
                         {s.nomor}. {s.pertanyaan}
                       </p>
-                      <p className="text-sm text-gray-700 mt-1">
-                        <strong>Jawaban: {s.jawaban_benar}</strong>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Jawaban: <strong>{s.jawaban_benar}</strong>
                       </p>
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-3 mt-3">
                         <button
                           onClick={() => handleEdit(s)}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium transition"
                         >
-                          ✏ Edit
+                          Edit
                         </button>
                         <button
                           onClick={() => handleDelete(s.id_soal)}
                           className="text-red-600 hover:text-red-800 text-sm font-medium transition"
                         >
-                          🗑 Hapus
+                          Hapus
                         </button>
                       </div>
                     </div>
@@ -336,30 +334,32 @@ export default function AdminMaterialPage() {
 
           {/* Atur Waktu Tes */}
           <SlideUp delay={400}>
-            <div className="bg-white/90 p-6 rounded-3xl shadow-xl border border-gray-200 backdrop-blur-sm">
-              <h2 className="text-xl font-bold text-blue-900 mb-6">
-                ⏰ Atur Waktu Tes
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 h-full flex flex-col">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+                Pengaturan Tes
               </h2>
-              <div className="space-y-4">
+
+              <div className="space-y-4 flex-1">
                 <input
                   type="text"
+                  placeholder="Judul Tes"
                   value={testConfig.judul}
                   onChange={(e) =>
                     setTestConfig({ ...testConfig, judul: e.target.value })
                   }
-                  placeholder="Judul Tes"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 />
                 <textarea
+                  placeholder="Deskripsi (opsional)"
                   value={testConfig.deskripsi}
                   onChange={(e) =>
                     setTestConfig({ ...testConfig, deskripsi: e.target.value })
                   }
-                  placeholder="Deskripsi (opsional)"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none h-20 text-gray-800 resize-none"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none h-20 text-slate-800 resize-none"
                 />
                 <input
                   type="number"
+                  placeholder="Durasi (menit)"
                   value={testConfig.durasi_menit}
                   onChange={(e) =>
                     setTestConfig({
@@ -367,8 +367,7 @@ export default function AdminMaterialPage() {
                       durasi_menit: parseInt(e.target.value) || 60,
                     })
                   }
-                  placeholder="Durasi (menit)"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 />
                 <input
                   type="datetime-local"
@@ -379,7 +378,7 @@ export default function AdminMaterialPage() {
                       waktu_mulai: e.target.value,
                     })
                   }
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 />
                 <input
                   type="datetime-local"
@@ -390,25 +389,29 @@ export default function AdminMaterialPage() {
                       waktu_selesai: e.target.value,
                     })
                   }
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-800"
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
                 />
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={testConfig.aktif}
                     onChange={(e) =>
                       setTestConfig({ ...testConfig, aktif: e.target.checked })
                     }
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-gray-800 font-medium">Tes Aktif</span>
+                  <span className="text-slate-800 font-medium">Tes Aktif</span>
                 </label>
+              </div>
+
+              {/* Tombol di bagian bawah */}
+              <div className="mt-6">
                 <button
                   onClick={handleSaveConfig}
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 rounded font-semibold transition"
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white py-3 rounded-lg font-semibold transition"
                 >
-                  Simpan Konfigurasi
+                  Simpan Pengaturan
                 </button>
               </div>
             </div>
