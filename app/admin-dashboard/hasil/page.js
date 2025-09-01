@@ -1,11 +1,10 @@
-// app/admin-dashboard/hasil/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
-import { getUserRole } from '../../../lib/auth'; // ✅ Gunakan langsung
+import { getUserRole } from '../../../lib/auth';
 
 export default function AdminHasilPage() {
   const [hasil, setHasil] = useState([]);
@@ -14,7 +13,7 @@ export default function AdminHasilPage() {
 
   const router = useRouter();
 
-  // 🔐 Cek role langsung tanpa API call
+  // 🔐 Cek role
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -34,7 +33,6 @@ export default function AdminHasilPage() {
       return;
     }
 
-    // ✅ Jika admin, ambil data
     fetchHasil();
   }, [router]);
 
@@ -50,80 +48,86 @@ export default function AdminHasilPage() {
     }
   };
 
-  // Tampilkan loading saat ambil data
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600">Memuat hasil tes...</p>
+        <p className="text-lg text-gray-600 font-medium">Memuat hasil tes...</p>
       </div>
     );
   }
 
-  // Tampilkan error jika ada
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 text-lg">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center p-6">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md">
+          <p className="text-red-600 text-lg font-semibold">❌ {error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
 
         <FadeIn>
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-blue-900 mb-2">📊 Hasil Tes Seleksi</h1>
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">📊 Hasil Tes Seleksi</h1>
           <p className="text-center text-gray-600 mb-8">Lihat hasil semua peserta tes.</p>
         </FadeIn>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-200 text-red-800 rounded-lg text-center text-sm animate-fade-in">
-            {error}
-          </div>
-        )}
-
         <SlideUp delay={200}>
-          <div className="bg-white rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 bg-gray-50">
               <h2 className="text-lg font-bold text-gray-800">📋 Daftar Hasil Tes</h2>
             </div>
 
             {/* Tabel untuk Desktop */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-sky-50/50 text-gray-700 uppercase text-xs">
+                <thead className="bg-sky-100 text-gray-800 uppercase text-sm font-semibold">
                   <tr>
-                    <th className="px-6 py-3">User ID</th>
-                    <th className="px-6 py-3">Pendaftar ID</th>
-                    <th className="px-6 py-3">Skor Benar</th>
-                    <th className="px-6 py-3">Skor Salah</th>
-                    <th className="px-6 py-3">Nilai</th>
-                    <th className="px-6 py-3">Waktu Mulai</th>
-                    <th className="px-6 py-3">Waktu Selesai</th>
-                    <th className="px-6 py-3">Durasi (menit)</th>
+                    <th className="px-6 py-4 text-left">Nama Pendaftar</th>
+                    <th className="px-6 py-4 text-right">Skor Benar</th>
+                    <th className="px-6 py-4 text-right">Skor Salah</th>
+                    <th className="px-6 py-4 text-right">Nilai</th>
+                    <th className="px-6 py-4 text-center">Waktu Mulai</th>
+                    <th className="px-6 py-4 text-center">Selesai</th>
+                    <th className="px-6 py-4 text-center">Durasi (menit)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-sky-100">
+                <tbody className="divide-y divide-gray-100">
                   {hasil.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-6 py-8 text-center text-gray-500 text-sm">
+                      <td colSpan="7" className="px-6 py-10 text-center text-gray-500 text-sm">
                         Belum ada peserta yang menyelesaikan tes.
                       </td>
                     </tr>
                   ) : (
                     hasil.map((h, i) => (
-                      <tr key={i} className="hover:bg-sky-50/40 transition">
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.user_id}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.pendaftar_id}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.skor_benar}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.skor_salah}</td>
-                        <td className="px-6 py-4 font-bold text-xs sm:text-sm">{h.nilai.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.waktu_mulai}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.waktu_selesai || '-'}</td>
-                        <td className="px-6 py-4 text-xs sm:text-sm">{h.durasi_menit || '-'}</td>
+                      <tr key={i} className="hover:bg-sky-50 transition duration-150">
+                        <td className="px-6 py-4 font-semibold text-gray-800">{h.pendaftar_name}</td>
+                        <td className="px-6 py-4 text-right text-gray-700">{h.skor_benar}</td>
+                        <td className="px-6 py-4 text-right text-gray-700">{h.skor_salah}</td>
+                        <td
+                          className={`px-6 py-4 text-right font-bold ${
+                            h.nilai >= 75
+                              ? 'text-green-700'
+                              : h.nilai >= 50
+                              ? 'text-yellow-600'
+                              : 'text-red-700'
+                          }`}
+                        >
+                          {h.nilai.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-center text-xs text-gray-500 tabular-nums">
+                          {h.waktu_mulai}
+                        </td>
+                        <td className="px-6 py-4 text-center text-xs text-gray-500 tabular-nums">
+                          {h.waktu_selesai || '-'}
+                        </td>
+                        <td className="px-6 py-4 text-center font-mono text-sm bg-gray-100 text-gray-800 rounded-lg w-20">
+                          {h.durasi_menit || '-'}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -137,42 +141,76 @@ export default function AdminHasilPage() {
                 <p className="text-center text-gray-500 py-6 text-sm">Belum ada peserta yang menyelesaikan tes.</p>
               ) : (
                 hasil.map((h, i) => (
-                  <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-gray-800 text-sm">User ID: {h.user_id}</h3>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          h.nilai >= 70
-                            ? 'bg-green-100 text-green-800'
-                            : h.nilai >= 50
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        Nilai: {h.nilai.toFixed(2)}
-                      </span>
+                  <div key={i} className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <h3 className="font-bold text-gray-800 text-lg mb-3">{h.pendaftar_name}</h3>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Skor:</span>
+                        <span>{h.skor_benar} benar, {h.skor_salah} salah</span>
+                      </div>
+
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Nilai:</span>
+                        <span
+                          className={
+                            h.nilai >= 75
+                              ? 'text-green-700'
+                              : h.nilai >= 50
+                              ? 'text-yellow-600'
+                              : 'text-red-700'
+                          }
+                        >
+                          {h.nilai.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 mt-3">
+                        <div><strong>Mulai:</strong> {h.waktu_mulai}</div>
+                        <div><strong>Selesai:</strong> {h.waktu_selesai || 'Belum'}</div>
+                        <div><strong>Durasi:</strong> {h.durasi_menit || '-'} menit</div>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-600">Pendaftar ID: {h.pendaftar_id}</p>
-                    <p className="text-xs text-gray-600">Skor: {h.skor_benar} benar, {h.skor_salah} salah</p>
-                    <p className="text-xs text-gray-600">Mulai: {h.waktu_mulai}</p>
-                    <p className="text-xs text-gray-600">Selesai: {h.waktu_selesai || 'Belum selesai'}</p>
-                    <p className="text-xs text-gray-600">Durasi: {h.durasi_menit || '-'} menit</p>
                   </div>
                 ))
               )}
             </div>
           </div>
         </SlideUp>
+
+        {/* Refresh Button */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={fetchHasil}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-full text-sm font-medium transition"
+          >
+            🔁 Muat Ulang
+          </button>
+        </div>
       </div>
 
-      {/* Animasi */}
+      {/* Styling Tambahan */}
       <style jsx>{`
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
+        @media (max-width: 768px) {
+          .text-lg {
+            font-size: 1rem;
+          }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        .tabular-nums {
+          font-variant-numeric: tabular-nums;
+        }
+        table {
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+        th:first-child, td:first-child {
+          border-top-left-radius: 0.75rem;
+          border-bottom-left-radius: 0.75rem;
+        }
+        th:last-child, td:last-child {
+          border-top-right-radius: 0.75rem;
+          border-bottom-right-radius: 0.75rem;
         }
       `}</style>
     </div>

@@ -14,7 +14,7 @@ export default function Sidebar() {
   const menuItems = [
     {
       href: "/admin-dashboard",
-      label: "Dasbor",
+      label: "Dashboard",
       icon: (
         <svg
           className="w-5 h-5"

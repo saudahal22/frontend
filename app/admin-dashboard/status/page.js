@@ -1,11 +1,9 @@
-// app/admin-dashboard/status/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FadeIn, SlideUp } from '../../../components/Animations';
 import { apiClient } from '../../../lib/apiClient';
-import { getUserRole } from '../../../lib/auth'; // Gunakan langsung
 
 export default function AdminStatusPage() {
   const [members, setMembers] = useState([]);
@@ -18,28 +16,44 @@ export default function AdminStatusPage() {
 
   const router = useRouter();
 
-  // 🔐 Cek role langsung, tanpa API call
+  // 🔐 Cek token dan role dengan lebih aman
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       router.push('/login');
       return;
     }
 
-    const role = getUserRole();
-    if (!role) {
+    try {
+      // Decode JWT untuk cek role dan expired
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const role = payload.role;
+      const exp = payload.exp * 1000; // waktu expired dalam ms
+
+      // Cek expired
+      if (Date.now() > exp) {
+        localStorage.removeItem('token');
+        alert('Sesi telah berakhir. Silakan login kembali.');
+        router.push('/login');
+        return;
+      }
+
+      // Cek role
+      if (!role || role !== 'admin') {
+        alert('Akses ditolak: Halaman ini hanya untuk admin.');
+        router.push('/dashboard');
+        return;
+      }
+
+      // Jika lolos semua, ambil data
+      fetchMembers();
+    } catch (err) {
+      console.error('Token tidak valid:', err);
+      localStorage.removeItem('token');
+      alert('Token tidak valid. Silakan login kembali.');
       router.push('/login');
-      return;
     }
-
-    if (role !== 'admin') {
-      alert('Akses ditolak: Halaman ini hanya untuk admin.');
-      router.push('/dashboard');
-      return;
-    }
-
-    // ✅ Jika admin, ambil data
-    fetchMembers();
   }, [router]);
 
   const fetchMembers = async () => {
@@ -54,6 +68,7 @@ export default function AdminStatusPage() {
     }
   };
 
+  // ... (fungsi lain tetap sama)
   const handleUpdateStatus = async (id, status) => {
     try {
       const formData = new FormData();
@@ -112,7 +127,6 @@ export default function AdminStatusPage() {
     );
   }
 
-  // Tampilkan error jika ada
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
@@ -123,11 +137,11 @@ export default function AdminStatusPage() {
     );
   }
 
+  // ... (render bagian UI seperti sebelumnya)
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 pt-16 pb-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
 
-        {/* Notifikasi */}
         {submitStatus && (
           <div className="mb-6 p-3 bg-green-100 border border-green-200 text-green-800 text-sm rounded-lg animate-fade-in">
             {submitStatus}
@@ -144,7 +158,6 @@ export default function AdminStatusPage() {
           <p className="text-gray-600 mb-6">Kelola data calon anggota Coconut secara real-time.</p>
         </FadeIn>
 
-        {/* Pencarian & Filter */}
         <SlideUp delay={200}>
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <input
@@ -167,12 +180,10 @@ export default function AdminStatusPage() {
           </div>
         </SlideUp>
 
-        {/* Tabel (Desktop) atau Card (Mobile) */}
         <SlideUp delay={300}>
           <div className="bg-white rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm overflow-hidden">
             <h2 className="text-xl font-bold text-blue-900 p-6 pb-4">👥 Daftar Calon Anggota</h2>
 
-            {/* Tabel untuk Desktop */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-sky-50/50 text-gray-700 uppercase text-xs">
@@ -260,7 +271,6 @@ export default function AdminStatusPage() {
               </table>
             </div>
 
-            {/* Card untuk Mobile */}
             <div className="md:hidden space-y-4 p-4">
               {filteredMembers.length === 0 ? (
                 <p className="text-center text-gray-500 py-4">Belum ada pendaftar.</p>
@@ -330,7 +340,6 @@ export default function AdminStatusPage() {
           </div>
         </SlideUp>
 
-        {/* Modal Detail */}
         {selectedMember && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -345,7 +354,6 @@ export default function AdminStatusPage() {
                   </button>
                 </div>
 
-                {/* Foto */}
                 {selectedMember.foto_path ? (
                   <div className="mb-6 flex justify-center">
                     <img
@@ -412,7 +420,6 @@ export default function AdminStatusPage() {
           </div>
         )}
 
-        {/* Animasi */}
         <style jsx>{`
           .animate-fade-in {
             animation: fadeIn 0.3s ease-out;
