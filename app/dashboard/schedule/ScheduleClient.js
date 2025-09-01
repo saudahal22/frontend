@@ -304,7 +304,7 @@ export default function ScheduleClient() {
                                 )}
                               </p>
                               <p className="text-amber-700 italic mt-1">
-                                "{j.alasan_perubahan}"
+                                &quot;{j.alasan_perubahan}&quot;
                               </p>
                               <button
                                 onClick={() => handleCancelRequest(j.id_jadwal)}

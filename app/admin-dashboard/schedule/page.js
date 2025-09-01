@@ -433,7 +433,7 @@ export default function AdminSchedulePage() {
                       </div>
 
                       <p className="text-sm text-slate-700 mt-3 italic">
-                        "{req.alasan_perubahan}"
+                        &quot;{req.alasan_perubahan}&quot;
                       </p>
 
                       {req.konfirmasi_jadwal === "belum" && (
